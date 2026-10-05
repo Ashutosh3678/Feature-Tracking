@@ -1685,7 +1685,7 @@
             });
           }
 
-          // 2) Bundled Node backend (server.js): REST for writes, Server-Sent Events for live updates.
+          // 2) Backend API: server.js streams changes (Server-Sent Events); serverless hosts like Vercel are polled.
           function connectServer() {
             if (!/^https?:$/.test(location.protocol) || typeof fetch !== 'function') return Promise.reject(new Error('not served over http'));
             return fetch('api/features', { cache: 'no-store' }).then(function (r) {
@@ -1702,7 +1702,19 @@
                 },
                 subscribe: function (cb, st) {
                   cb(j.docs);
-                  if (typeof EventSource !== 'function') { st('live'); return; }
+                  st('live');
+                  if (!j.stream || typeof EventSource !== 'function') {
+                    var poll = function () {
+                      if (document.visibilityState === 'hidden') return;
+                      fetch('api/features', { cache: 'no-store' })
+                        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                        .then(function (x) { if (x && typeof x.docs === 'object') cb(x.docs); })
+                        .catch(function () { /* retry on next tick */ });
+                    };
+                    setInterval(poll, 4000);
+                    document.addEventListener('visibilitychange', poll);
+                    return;
+                  }
                   var es = new EventSource('api/stream');
                   es.addEventListener('snapshot', function (e) {
                     try { cb(JSON.parse(e.data).docs); } catch (err) { /* ignore malformed */ }

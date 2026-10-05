@@ -18,36 +18,15 @@ const COLLECTION = 'features';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const INDEX_FILE = path.join(__dirname, 'index.html');
 
-const ID_RE = /^f[1-9]\d{0,3}$/;
+const { ID_RE, MAX_DOCS, sanitize } = require('./lib/shared');
+
 const MAX_BODY = 1024 * 1024;
-const MAX_DOCS = 1000;
 const POLL_MS = 5000;
 
 // In-memory cache of the "features" collection, keyed by feature id (f1, f2, ...).
 let docs = {};
 let storage = null;
 const clients = new Set();
-
-// Drops operator-like keys ($..., dotted, _id, __proto__) so request bodies are safe to store in MongoDB.
-function sanitize(value, depth) {
-  if (depth > 8) return undefined;
-  if (Array.isArray(value)) {
-    return value.slice(0, 5000).map((v) => sanitize(v, depth + 1)).filter((v) => v !== undefined);
-  }
-  if (value && typeof value === 'object') {
-    const out = {};
-    for (const key of Object.keys(value)) {
-      if (key.startsWith('$') || key.includes('.') || key === '_id' || key === '__proto__') continue;
-      const v = sanitize(value[key], depth + 1);
-      if (v !== undefined) out[key] = v;
-    }
-    return out;
-  }
-  if (typeof value === 'string') return value.slice(0, 5000);
-  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
-  if (typeof value === 'boolean' || value === null) return value;
-  return undefined;
-}
 
 /* ---------- storage: MongoDB ---------- */
 async function createMongoStorage() {
@@ -266,7 +245,7 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname === '/api/features') {
       if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
-      return sendJson(res, 200, { docs });
+      return sendJson(res, 200, { docs, stream: true });
     }
 
     if (pathname === '/api/stream' && req.method === 'GET') {
