@@ -1371,6 +1371,28 @@
           width: 100%;
         }
       }
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 50vh;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid var(--line);
+        border-top-color: var(--ink2);
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
       @media (prefers-reduced-motion: reduce) {
         * {
           transition: none !important;
@@ -1417,7 +1439,7 @@
           var $tabs = document.getElementById('tabs');
           var $toast = document.getElementById('toast');
           var $modal = document.getElementById('modal');
-          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null };
+          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null, loaded: false };
           var store = null;
           var pendingRemote = false;
           var pointerDown = false;
@@ -1635,6 +1657,7 @@
             Object.keys(state.docs).forEach(function (id) {
               if (!remoteIds[id] && !dirty[id]) delete state.docs[id];
             });
+            if (!state.loaded) { state.loaded = true; render(); return; }
             if (isTyping() || pointerDown) pendingRemote = true; else render();
           }
 
@@ -1822,6 +1845,11 @@
           }
 
           function render(scrollTop) {
+            if (!state.loaded) {
+              $tabs.innerHTML = '';
+              $app.innerHTML = '<div class="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span>Loading features…</div>';
+              return;
+            }
             var v = state.view;
             if (v !== 'overview') {
               var ok = ID_RE.test(v) && allIds().indexOf(v) >= 0 && !getF(v).deleted;
