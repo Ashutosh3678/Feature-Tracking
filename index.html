@@ -1,0 +1,2328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>Feature Tracker</title>
+    <style>
+      :root {
+        --font:
+          "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui,
+          -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+        --bg: #f6f6f3;
+        --card: #fff;
+        --ink: #1f2328;
+        --ink2: #424a53;
+        --muted: #6e7781;
+        --faint: #8c959f;
+        --line: #e3e3de;
+        --line-soft: #edede8;
+        --hover: #f3f3ef;
+        --accent: #1a7f64;
+        --accent-soft: #e3f2ec;
+        --ok: #1a7f37;
+        --warn: #9a6700;
+        --bad: #cf222e;
+        --done: #0969da;
+        --idle: #6e7781;
+        --radius: 10px;
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        font: 14.5px/1.55 var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      p {
+        margin: 0;
+      }
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .t-ok {
+        color: var(--ok);
+      }
+      .t-warn {
+        color: var(--warn);
+      }
+      .t-bad {
+        color: var(--bad);
+      }
+      .t-muted {
+        color: var(--muted);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* Top bar */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--card);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar-in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        height: 54px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+      .brand strong {
+        font-size: 15px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+      .brand small {
+        color: var(--muted);
+        font-size: 13px;
+        padding-left: 10px;
+        border-left: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      .logo {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: var(--ink);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+      }
+      .status {
+        --c: var(--idle);
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        color: var(--muted);
+        white-space: nowrap;
+        padding: 3px 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+      }
+      .status .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c);
+      }
+      .s-connecting {
+        --c: var(--warn);
+      }
+      .s-connecting .dot {
+        animation: pulse 1.2s infinite;
+      }
+      .s-live {
+        --c: var(--ok);
+      }
+      .s-error {
+        --c: var(--bad);
+        color: var(--bad);
+      }
+      @keyframes pulse {
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: -1px;
+      }
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .tab {
+        flex: none;
+        appearance: none;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: none;
+        color: var(--muted);
+        font: inherit;
+        font-size: 13.5px;
+        font-weight: 500;
+        padding: 9px 10px 10px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        max-width: 220px;
+      }
+      .tab .tl {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tab:hover {
+        color: var(--ink);
+      }
+      .tab.active {
+        color: var(--ink);
+        border-bottom-color: var(--ink);
+        font-weight: 600;
+      }
+      .tab-add {
+        color: var(--accent);
+        font-weight: 550;
+      }
+      .tab-add:hover {
+        color: var(--accent);
+      }
+      .tdot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c);
+      }
+
+      /* Status colors */
+      .h-on-track,
+      .h-on-schedule {
+        --c: var(--ok);
+      }
+      .h-on-hold {
+        --c: var(--warn);
+      }
+      .h-overdue {
+        --c: var(--bad);
+      }
+      .h-completed,
+      .h-done {
+        --c: var(--done);
+      }
+      .h-in-progress,
+      .h-brand {
+        --c: var(--accent);
+      }
+      .h-not-started,
+      .h-no-date,
+      .h-none {
+        --c: var(--idle);
+      }
+      .pill {
+        --c: var(--idle);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 550;
+        line-height: 22px;
+        color: var(--c);
+        background: #f6f6f4;
+        border: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      @supports (background: color-mix(in srgb, red 10%, white)) {
+        .pill {
+          background: color-mix(in srgb, var(--c) 7%, #fff);
+          border-color: color-mix(in srgb, var(--c) 22%, #fff);
+        }
+      }
+      .pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .pill.sm {
+        font-size: 11.5px;
+        line-height: 20px;
+        padding: 0 7px;
+      }
+
+      /* Layout */
+      main {
+        padding-bottom: 24px;
+      }
+      .page-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin: 32px 0 20px;
+        flex-wrap: wrap;
+      }
+      .page-head h1 {
+        font-size: 24px;
+      }
+      .page-head p {
+        margin-top: 2px;
+      }
+      .sec-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+        margin: 32px 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .card h2 {
+        font-size: 15px;
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .count {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--muted);
+        background: var(--hover);
+        border-radius: 999px;
+        padding: 0 8px;
+        line-height: 20px;
+      }
+
+      /* Buttons & inputs */
+      .btn {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--card);
+        color: var(--ink);
+        font: inherit;
+        font-size: 13.5px;
+        font-weight: 550;
+        padding: 6px 14px;
+        border-radius: 7px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 36px;
+        text-decoration: none;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+      }
+      .btn:hover {
+        background: var(--hover);
+        border-color: #d3d3cc;
+      }
+      .btn.primary {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #fff;
+      }
+      .btn.primary:hover {
+        background: #353b42;
+      }
+      .btn.danger {
+        color: var(--bad);
+      }
+      .btn.danger:hover {
+        background: #fff5f5;
+        border-color: #f0c4c7;
+      }
+      .btn.sm {
+        padding: 3px 10px;
+        font-size: 13px;
+        min-height: 30px;
+      }
+      .icon-btn {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--faint);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        display: inline-grid;
+        place-items: center;
+      }
+      .icon-btn:hover {
+        color: var(--bad);
+        background: #fff1f1;
+      }
+      .link {
+        appearance: none;
+        border: 0;
+        background: none;
+        padding: 0;
+        font: inherit;
+        color: var(--accent);
+        font-weight: 550;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .link:hover {
+        text-decoration: underline;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--ink2);
+      }
+      input,
+      select,
+      textarea {
+        font: inherit;
+        font-size: 14px;
+        color: var(--ink);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 6px 10px;
+        width: 100%;
+        min-width: 0;
+        min-height: 36px;
+        transition:
+          border-color 0.12s,
+          box-shadow 0.12s;
+      }
+      input:hover,
+      select:hover,
+      textarea:hover {
+        border-color: #d0d0c9;
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--faint);
+      }
+      textarea {
+        resize: vertical;
+        min-height: 72px;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+      .req {
+        color: var(--bad);
+      }
+      .hero > *,
+      .phases > *,
+      .grid2 > *,
+      .fields > *,
+      .dates > *,
+      .frow > *,
+      .stats > *,
+      .fgrid > * {
+        min-width: 0;
+      }
+
+      /* Overview */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        padding: 0;
+        overflow: hidden;
+      }
+      .stat {
+        padding: 16px 20px;
+        border-left: 1px solid var(--line-soft);
+      }
+      .stat:first-child {
+        border-left: 0;
+      }
+      .stat .k {
+        font-size: 12.5px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .stat .k::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c, var(--idle));
+      }
+      .stat.h-none .k::before {
+        display: none;
+      }
+      .stat .v {
+        font-size: 26px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+      .fgrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 14px;
+      }
+      .fcard {
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        transition:
+          border-color 0.12s,
+          box-shadow 0.12s;
+      }
+      .fcard:hover {
+        border-color: #cdcdc6;
+        box-shadow: 0 2px 10px rgba(31, 35, 40, 0.06);
+      }
+      .fcard-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      .fcard-top h3 {
+        font-size: 16px;
+        word-break: break-word;
+      }
+      .k-sm {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .prog {
+        display: grid;
+        gap: 8px;
+      }
+      .big {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .big b {
+        font-size: 28px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+      .big span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .big .cur {
+        margin-left: auto;
+        color: var(--ink2);
+        font-weight: 500;
+      }
+      .mini {
+        display: grid;
+        gap: 8px;
+      }
+      .mini-row {
+        display: grid;
+        grid-template-columns: 90px 1fr 36px 22px;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .mini-row b {
+        text-align: right;
+        font-weight: 550;
+        font-variant-numeric: tabular-nums;
+      }
+      .fcard-foot {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+        color: var(--muted);
+        border-top: 1px solid var(--line-soft);
+        padding-top: 12px;
+        margin-top: auto;
+      }
+      .fcard-foot b {
+        color: var(--ink2);
+        font-weight: 550;
+      }
+      .bar {
+        height: 6px;
+        background: #ebebe5;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        transition: width 0.35s ease;
+      }
+      .bar.thin {
+        height: 4px;
+      }
+      .feed {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .upd {
+        padding: 14px 0;
+        border-top: 1px solid var(--line-soft);
+        display: grid;
+        gap: 4px;
+      }
+      .upd:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .upd:last-child {
+        padding-bottom: 0;
+      }
+      .upd-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-size: 12px;
+        font-weight: 500;
+        padding: 0 7px;
+        line-height: 20px;
+        border-radius: 5px;
+        background: var(--hover);
+        color: var(--ink2);
+        border: 1px solid var(--line-soft);
+        white-space: nowrap;
+      }
+      .upd-meta {
+        margin-left: auto;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .prewrap {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .blk {
+        font-size: 13.5px;
+        color: #a40e26;
+      }
+      .blk strong {
+        font-weight: 600;
+      }
+      .arch-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line-soft);
+        flex-wrap: wrap;
+      }
+      .arch-row:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .arch-row .grow {
+        flex: 1;
+        min-width: 160px;
+      }
+      .arch-row .acts {
+        display: flex;
+        gap: 6px;
+      }
+
+      /* Feature view */
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 24px 0 12px;
+        font-size: 13.5px;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 230px;
+        gap: 28px;
+        align-items: start;
+      }
+      .title-input {
+        font-size: 24px;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+        border: 1px solid transparent;
+        background: transparent;
+        padding: 2px 8px;
+        margin-left: -9px;
+        border-radius: 7px;
+        min-height: 0;
+      }
+      .title-input:hover {
+        border-color: var(--line);
+      }
+      .title-input:focus {
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+      .hero-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+        font-size: 13.5px;
+      }
+      .sep {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #c4c4bd;
+      }
+      .fields {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .hero-side {
+        border-left: 1px solid var(--line-soft);
+        padding-left: 24px;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+      .hero-side .big b {
+        font-size: 40px;
+      }
+      .hero-actions {
+        grid-column: 1/-1;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        border-top: 1px solid var(--line-soft);
+        padding-top: 14px;
+        flex-wrap: wrap;
+      }
+      .banner {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        margin-top: 14px;
+        flex-wrap: wrap;
+        font-size: 14px;
+        background: var(--accent-soft);
+        border: 1px solid #c4e3d7;
+        color: #145c49;
+      }
+      .banner.arch {
+        background: var(--hover);
+        border-color: var(--line);
+        color: var(--ink2);
+      }
+      .phases {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .phase {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px;
+      }
+      .phase-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .phase-top h3 {
+        font-size: 15px;
+        flex: 1;
+      }
+      .pnum {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--ink2);
+        background: var(--hover);
+        border: 1px solid var(--line);
+      }
+      .w {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .phase-pct {
+        display: grid;
+        gap: 8px;
+      }
+      .phase-pct b {
+        font-size: 26px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+      }
+      .kv {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+      }
+      .kv div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+      .kv dt {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .kv dd {
+        margin: 0;
+      }
+      .dates {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 8px;
+        border-top: 1px solid var(--line-soft);
+        padding-top: 12px;
+      }
+      .dates input {
+        padding: 5px 7px;
+        font-size: 13px;
+        min-height: 34px;
+      }
+      .hint {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+      }
+      .chart {
+        width: 100%;
+        height: auto;
+        display: block;
+        overflow: visible;
+      }
+      .chart .grid {
+        stroke: #ecece6;
+      }
+      .chart .ylab,
+      .chart .xlab {
+        fill: var(--faint);
+        font-size: 11px;
+        font-family: var(--font);
+      }
+      .chart .line {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 2;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .chart .area {
+        fill: var(--accent);
+        opacity: 0.07;
+      }
+      .chart .pt {
+        fill: #fff;
+        stroke: var(--accent);
+        stroke-width: 2;
+      }
+      .chart .pt:hover {
+        stroke-width: 3.5;
+      }
+      .chart .vlab {
+        fill: var(--ink);
+        font-weight: 600;
+        font-size: 12px;
+        font-family: var(--font);
+      }
+      .chart-note {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .empty {
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 32px 16px;
+        text-align: center;
+        color: var(--muted);
+        display: grid;
+        gap: 8px;
+        justify-items: center;
+        font-size: 13.5px;
+      }
+      .empty strong {
+        color: var(--ink2);
+        font-weight: 600;
+      }
+      .form {
+        display: grid;
+        gap: 12px;
+      }
+      .frow {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+      }
+      .form-err {
+        color: var(--bad);
+        font-size: 13.5px;
+        background: #fff5f5;
+        border: 1px solid #f0c4c7;
+        padding: 8px 12px;
+        border-radius: 7px;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        margin: 0 -20px;
+      }
+      table.log {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+      table.log th {
+        text-align: left;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--muted);
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+        background: #fbfbf9;
+      }
+      table.log th:first-child,
+      table.log td:first-child {
+        padding-left: 20px;
+      }
+      table.log td {
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--line-soft);
+        vertical-align: top;
+      }
+      table.log tr:last-child td {
+        border-bottom: 0;
+      }
+      table.log td.txt {
+        min-width: 180px;
+      }
+      table.log td.nowrap {
+        white-space: nowrap;
+      }
+      table.log tbody tr:hover {
+        background: #fbfbf9;
+      }
+
+      /* People */
+      .av {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: inline-grid;
+        place-items: center;
+        font-size: 10px;
+        font-weight: 650;
+        color: var(--avf, #424a53);
+        background: var(--avb, #eee);
+        letter-spacing: 0;
+      }
+      .av.unset {
+        background: transparent;
+        border: 1px dashed #c9c9c2;
+        color: var(--faint);
+      }
+      .av.lg {
+        width: 28px;
+        height: 28px;
+        font-size: 11.5px;
+      }
+      .who {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        font-size: 13px;
+        color: var(--ink2);
+      }
+      .who span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        min-height: 0;
+        padding: 0;
+        margin: 0;
+        flex: none;
+        accent-color: var(--accent);
+        box-shadow: none;
+      }
+      .stack {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+      }
+      .stack .av {
+        box-shadow: 0 0 0 2px var(--card);
+      }
+      .stack .av + .av {
+        margin-left: -3px;
+      }
+      .av.more {
+        background: var(--hover);
+        color: var(--ink2);
+      }
+      .mini-row.own {
+        grid-template-columns: 84px 1fr 36px 41px;
+      }
+      .owners-field {
+        display: grid;
+        gap: 5px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--ink2);
+      }
+      .picker {
+        position: relative;
+      }
+      .picker summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 4px 10px 4px 6px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        cursor: pointer;
+        background: var(--card);
+        font-size: 13.5px;
+        color: var(--ink);
+      }
+      .picker summary::-webkit-details-marker {
+        display: none;
+      }
+      .picker summary:hover {
+        border-color: #d0d0c9;
+      }
+      .picker summary .names {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .picker summary::after {
+        content: "";
+        flex: none;
+        width: 6px;
+        height: 6px;
+        border-right: 1.5px solid var(--muted);
+        border-bottom: 1.5px solid var(--muted);
+        transform: translateY(-2px) rotate(45deg);
+      }
+      .picker[open] summary {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+      .picker-menu {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 15;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(31, 35, 40, 0.12);
+        padding: 4px;
+        min-width: 180px;
+      }
+      .opt {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13.5px;
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .opt:hover {
+        background: var(--hover);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        position: relative;
+        display: inline-flex;
+        flex-direction: row;
+      }
+      .chip input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .chip span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px 3px 4px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink2);
+        background: var(--card);
+        cursor: pointer;
+        user-select: none;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+      }
+      .chip span:hover {
+        border-color: #d0d0c9;
+      }
+      .chip input:checked + span {
+        border-color: #9fd0bd;
+        background: var(--accent-soft);
+        color: #145c49;
+      }
+      .chip input:focus-visible + span {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .owner-block {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 10px 0;
+        border-top: 1px solid var(--line-soft);
+      }
+      .owner-block:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .owner-block .pn {
+        font-size: 13px;
+        font-weight: 550;
+        color: var(--ink2);
+        padding-top: 4px;
+      }
+
+      /* Modal */
+      .modal-back {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgba(31, 35, 40, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: fade 0.12s ease;
+      }
+      .modal {
+        width: 100%;
+        max-width: 560px;
+        max-height: calc(100vh - 32px);
+        overflow: auto;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 18px 50px rgba(31, 35, 40, 0.18);
+        animation: pop 0.15s ease;
+      }
+      .modal h2 {
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+      .modal .sub {
+        color: var(--muted);
+        font-size: 13.5px;
+        margin-bottom: 20px;
+      }
+      .modal-sec {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--ink);
+        margin: 22px 0 10px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 22px;
+        flex-wrap: wrap;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+        }
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+      }
+
+      .foot {
+        color: var(--muted);
+        font-size: 12.5px;
+        padding-top: 24px;
+        padding-bottom: calc(28px + env(safe-area-inset-bottom));
+        text-align: center;
+      }
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        transform: translate(-50%, 12px);
+        background: var(--ink);
+        color: #fff;
+        padding: 9px 16px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.18s,
+          transform 0.18s;
+        z-index: 70;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      @media (max-width: 1020px) {
+        .phases {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 900px) {
+        .grid2 {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      @media (max-width: 720px) {
+        .wrap {
+          padding: 0 14px;
+        }
+        .hero {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 18px;
+        }
+        .hero-side {
+          border-left: 0;
+          padding-left: 0;
+          border-top: 1px solid var(--line-soft);
+          padding-top: 16px;
+          order: 2;
+        }
+        .hero-actions {
+          order: 3;
+        }
+        .fields {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .title-input {
+          font-size: 21px;
+        }
+        .page-head h1 {
+          font-size: 22px;
+        }
+        .brand small {
+          display: none;
+        }
+        .table-wrap {
+          margin: 0;
+        }
+        table.log thead {
+          display: none;
+        }
+        table.log,
+        table.log tbody,
+        table.log tr,
+        table.log td {
+          display: block;
+          width: 100%;
+        }
+        table.log tr {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: 8px 12px;
+          margin-bottom: 10px;
+        }
+        table.log td,
+        table.log td:first-child {
+          border: 0 !important;
+          padding: 4px 0;
+          display: grid;
+          grid-template-columns: 88px 1fr;
+          gap: 8px;
+          min-width: 0 !important;
+        }
+        table.log td::before {
+          content: attr(data-label);
+          color: var(--muted);
+          font-size: 12px;
+        }
+        table.log td.act {
+          display: flex;
+          justify-content: flex-end;
+        }
+        table.log td.act::before {
+          display: none;
+        }
+      }
+      @media (max-width: 560px) {
+        .phases {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .stat:nth-child(n) {
+          border-left: 1px solid var(--line-soft);
+          border-top: 1px solid var(--line-soft);
+        }
+        .stat:nth-child(odd) {
+          border-left: 0;
+        }
+        .stat:nth-child(-n + 2) {
+          border-top: 0;
+        }
+        .frow,
+        .owner-block {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .upd-meta {
+          margin-left: 0;
+          width: 100%;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-in">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">FT</span>
+          <strong>Feature Tracker</strong>
+        </div>
+      </div>
+      <nav class="wrap" aria-label="Features">
+        <div id="tabs" class="tabs"></div>
+      </nav>
+    </header>
+    <main id="app" class="wrap" aria-live="off"></main>
+    <footer class="wrap foot"></footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="modal"></div>
+    <script>
+        (function () {
+          'use strict';
+
+          var PHASES = ['Design', 'Development', 'Testing', 'Review and Shipping'];
+          var WEIGHTS = { 'Design': 0.20, 'Development': 0.40, 'Testing': 0.25, 'Review and Shipping': 0.15 };
+          var LEGACY_PHASE = { 'Shipping': 'Review and Shipping' };
+          var HEALTH = ['On Track', 'On Hold'];
+          var LEGACY_HEALTH = { 'Blocked': 'On Hold', 'At Risk': 'On Track' };
+          var DEFAULT_IDS = ['f1', 'f2', 'f3', 'f4'];
+          var TEAM = ['Nishi', 'Ashutosh', 'Saiteja', 'Charan', 'Tharun', 'Venkat'];
+          var AV_COLORS = [['#e6eefc', '#1f4fa3'], ['#e3f2ec', '#17654f'], ['#fbefd9', '#8a5300'], ['#f9e6ee', '#9b2c58'],
+            ['#ece8f8', '#5134a4'], ['#e1f1f4', '#1d6474'], ['#f6ebe1', '#8c4a1c'], ['#eef0f2', '#424a53']];
+          var ID_RE = /^f[1-9]\d{0,3}$/;
+          var LS_DOCS = 'featureTracker.v1.features';
+          var LS_BY = 'featureTracker.v1.lastBy';
+          var SAVE_DELAY = 350;
+
+          var $app = document.getElementById('app');
+          var $tabs = document.getElementById('tabs');
+          var $toast = document.getElementById('toast');
+          var $modal = document.getElementById('modal');
+          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null };
+          var store = null;
+          var pendingRemote = false;
+          var pointerDown = false;
+          var timers = {}, versions = {}, dirty = {};
+
+          /* ---------- utilities ---------- */
+          function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"'`]/g, function (c) {
+              return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c];
+            });
+          }
+          function pad(n) { return String(n).padStart(2, '0'); }
+          function today() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+          function dnum(s) { return Date.parse(s + 'T00:00:00Z'); }
+          function isDate(s) {
+            if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+            var t = dnum(s);
+            return !isNaN(t) && new Date(t).toISOString().slice(0, 10) === s;
+          }
+          function diffDays(a, b) { return Math.round((dnum(a) - dnum(b)) / 864e5); }
+          function fmtDate(s, opts) {
+            if (!isDate(s)) return '—';
+            var o = opts || { month: 'short', day: 'numeric', year: 'numeric' };
+            o.timeZone = 'UTC';
+            try { return new Date(dnum(s)).toLocaleDateString(undefined, o); } catch (e) { return s; }
+          }
+          function str(v, max) {
+            if (typeof v === 'number' && isFinite(v)) v = String(v);
+            return typeof v === 'string' ? v.slice(0, max || 200) : '';
+          }
+          function clampPct(v) { var n = Number(v); if (!isFinite(n)) return 0; return Math.max(0, Math.min(100, Math.round(n))); }
+          function slug(s) { return String(s).toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-+|-+$/g, '') || 'none'; }
+          function idNum(id) { return parseInt(String(id).slice(1), 10) || 0; }
+          function newEntryId() { return 'e' + Date.now().toString(36).padStart(9, '0') + Math.random().toString(36).slice(2, 7); }
+          function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
+          function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+          function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+          function displayName(f) { return (f.name || '').trim() || ('Feature ' + idNum(f.id)); }
+
+          var toastTimer;
+          function toast(msg) {
+            $toast.textContent = msg;
+            $toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { $toast.classList.remove('show'); }, 2200);
+          }
+
+          /* ---------- normalization (all stored data is untrusted) ---------- */
+          function normEntry(e, i) {
+            if (!e || typeof e !== 'object') return null;
+            if (!isDate(e.date)) return null;
+            return {
+              id: str(e.id, 40) || ('x' + pad(i) + '-' + e.date),
+              date: e.date,
+              phase: PHASES.indexOf(e.phase) >= 0 ? e.phase : (LEGACY_PHASE[e.phase] || PHASES[0]),
+              pct: clampPct(e.pct),
+              health: HEALTH.indexOf(e.health) >= 0 ? e.health : (LEGACY_HEALTH[e.health] || 'On Track'),
+              by: str(e.by, 80),
+              work: str(e.work, 2000),
+              blockers: str(e.blockers, 2000)
+            };
+          }
+          function normOwners(x) {
+            var list = Array.isArray(x.owners) ? x.owners : (x.owner ? [x.owner] : []);
+            var out = [];
+            list.slice(0, 20).forEach(function (n) {
+              n = str(n, 80).trim();
+              if (n && out.indexOf(n) < 0) out.push(n);
+            });
+            return sortPeople(out);
+          }
+          function sortPeople(names) {
+            return names.slice().sort(function (a, b) {
+              var ia = TEAM.indexOf(a), ib = TEAM.indexOf(b);
+              return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (a < b ? -1 : a > b ? 1 : 0);
+            });
+          }
+          function normFeature(raw, id) {
+            raw = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+            if (raw.deleted === true) return { id: id, deleted: true };
+            var rp = raw.phases && typeof raw.phases === 'object' ? raw.phases : {};
+            var phases = {};
+            PHASES.forEach(function (p) {
+              var legacyKey = Object.keys(LEGACY_PHASE).filter(function (k) { return LEGACY_PHASE[k] === p; })[0];
+              var src = rp[p] || (legacyKey && rp[legacyKey]);
+              var x = src && typeof src === 'object' ? src : {};
+              phases[p] = { start: isDate(x.start) ? x.start : '', end: isDate(x.end) ? x.end : '', owners: normOwners(x) };
+            });
+            var log = (Array.isArray(raw.log) ? raw.log : []).slice(0, 5000).map(normEntry).filter(Boolean);
+            return {
+              id: id,
+              name: str(raw.name, 80).trim() ? str(raw.name, 80) : 'Feature ' + idNum(id),
+              lead: str(raw.lead, 80),
+              start: isDate(raw.start) ? raw.start : '',
+              target: isDate(raw.target) ? raw.target : '',
+              phases: phases,
+              log: log,
+              archived: raw.archived === true
+            };
+          }
+          function serialize(f) {
+            if (f.deleted) return { deleted: true, updatedAt: Date.now() };
+            return JSON.parse(JSON.stringify({
+              name: f.name, lead: f.lead, start: f.start, target: f.target,
+              phases: f.phases, log: f.log, archived: !!f.archived, updatedAt: Date.now()
+            }));
+          }
+
+          /* ---------- derived values ---------- */
+          function phasePcts(log) {
+            var o = {};
+            PHASES.forEach(function (p) { o[p] = 0; });
+            log.forEach(function (e) { if (e.pct > o[e.phase]) o[e.phase] = e.pct; });
+            return o;
+          }
+          function weighted(pcts) {
+            var s = PHASES.reduce(function (acc, p) { return acc + WEIGHTS[p] * pcts[p]; }, 0);
+            return Math.round(s * 100) / 100;
+          }
+          function cmpEntry(a, b) {
+            if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+            return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+          }
+          function derive(f) {
+            var t = today(), pcts = phasePcts(f.log), phases = {};
+            PHASES.forEach(function (p) {
+              var pct = pcts[p];
+              var entries = f.log.filter(function (e) { return e.phase === p; }).sort(cmpEntry);
+              var latest = entries[entries.length - 1];
+              var plan = f.phases[p];
+              phases[p] = {
+                pct: pct,
+                status: pct >= 100 ? 'Completed' : pct > 0 ? 'In Progress' : 'Not Started',
+                health: pct >= 100 ? 'Done' : latest ? latest.health : '–',
+                schedule: pct >= 100 ? 'Done' : !plan.end ? 'No date' : t > plan.end ? 'Overdue' : 'On schedule'
+              };
+            });
+            var overall = weighted(pcts);
+            var current = 'All done';
+            for (var i = 0; i < PHASES.length; i++) { if (pcts[PHASES[i]] < 100) { current = PHASES[i]; break; } }
+            var hs = PHASES.map(function (p) { return phases[p].health; });
+            var health;
+            if (hs.indexOf('On Hold') >= 0) health = 'On Hold';
+            else if (overall >= 100) health = 'Completed';
+            else if (overall <= 0) health = 'Not Started';
+            else health = 'On Track';
+            var lastUpdate = f.log.reduce(function (m, e) { return e.date > m ? e.date : m; }, '');
+            return {
+              phases: phases, overall: overall, current: current, health: health, lastUpdate: lastUpdate,
+              daysToShip: f.target ? diffDays(f.target, t) : null
+            };
+          }
+          function shipInfo(d) {
+            if (d.daysToShip == null) return { text: 'No target date', cls: 't-muted' };
+            var n = d.daysToShip;
+            if (d.overall >= 100) return { text: 'Shipped', cls: 't-ok' };
+            if (n > 0) return { text: plural(n, 'day') + ' left', cls: n <= 7 ? 't-warn' : 't-ok' };
+            if (n === 0) return { text: 'Ships today', cls: 't-warn' };
+            return { text: plural(-n, 'day') + ' overdue', cls: 't-bad' };
+          }
+
+          /* ---------- feature collection ---------- */
+          function allIds() {
+            var seen = {};
+            DEFAULT_IDS.forEach(function (id) { seen[id] = 1; });
+            Object.keys(state.docs).forEach(function (id) { if (ID_RE.test(id)) seen[id] = 1; });
+            return Object.keys(seen).sort(function (a, b) { return idNum(a) - idNum(b); });
+          }
+          function getF(id) {
+            if (!state.docs[id]) state.docs[id] = normFeature({}, id);
+            return state.docs[id];
+          }
+          function liveFeatures() { return allIds().map(getF).filter(function (f) { return !f.deleted; }); }
+          function activeFeatures() { return liveFeatures().filter(function (f) { return !f.archived; }); }
+          function currentF() {
+            var v = state.view;
+            if (v === 'overview' || !ID_RE.test(v)) return null;
+            var f = getF(v);
+            return f.deleted ? null : f;
+          }
+
+          /* ---------- persistence ---------- */
+          function touch(id) {
+            versions[id] = (versions[id] || 0) + 1;
+            dirty[id] = true;
+            clearTimeout(timers[id]);
+            timers[id] = setTimeout(function () { flush(id); }, SAVE_DELAY);
+          }
+          function flush(id) {
+            clearTimeout(timers[id]);
+            if (!store) { timers[id] = setTimeout(function () { flush(id); }, 500); return; }
+            var f = state.docs[id];
+            if (!f) { delete dirty[id]; return; }
+            var v = versions[id];
+            var doc = serialize(f);
+            Promise.resolve().then(function () { return store.save(id, doc); }).then(function () {
+              if (versions[id] === v) delete dirty[id];
+              setStatus(store.mode === 'local' ? 'local' : 'live');
+            }, function (err) {
+              console.warn('Save failed for ' + id, err);
+              setStatus('error');
+              timers[id] = setTimeout(function () { flush(id); }, 5000);
+            });
+          }
+          function flushAll() { Object.keys(dirty).forEach(flush); }
+
+          function applyRemote(docs) {
+            if (!docs || typeof docs !== 'object') return;
+            var remoteIds = {};
+            Object.keys(docs).forEach(function (id) {
+              if (!ID_RE.test(id)) return;
+              remoteIds[id] = 1;
+              if (!dirty[id]) state.docs[id] = normFeature(docs[id], id);
+            });
+            Object.keys(state.docs).forEach(function (id) {
+              if (!remoteIds[id] && !dirty[id]) delete state.docs[id];
+            });
+            if (isTyping() || pointerDown) pendingRemote = true; else render();
+          }
+
+          function snapToDocs(snap) {
+            var out = {};
+            function add(doc) {
+              if (!doc) return;
+              var id = doc.id;
+              var data = typeof doc.data === 'function' ? doc.data() : (doc.data !== undefined ? doc.data : doc);
+              if (id && ID_RE.test(id)) out[id] = data;
+            }
+            if (!snap) return out;
+            if (Array.isArray(snap)) snap.forEach(add);
+            else if (Array.isArray(snap.docs)) snap.docs.forEach(add);
+            else if (typeof snap.forEach === 'function') snap.forEach(add);
+            else if (typeof snap === 'object') Object.keys(snap).forEach(function (k) { if (ID_RE.test(k)) out[k] = snap[k]; });
+            return out;
+          }
+
+          // 1) Platform shared database (claude.use("db")), Firestore-style API.
+          function connectPlatformDb() {
+            return new Promise(function (resolve, reject) {
+              var settled = false;
+              function fail(e) { if (!settled) { settled = true; reject(e); } }
+              try {
+                if (typeof claude === 'undefined' || !claude || typeof claude.use !== 'function') return fail(new Error('no platform db'));
+                Promise.resolve(claude.use('db')).then(function (db) {
+                  if (!db || typeof db.collection !== 'function') return fail(new Error('db has no collection()'));
+                  var col = db.collection('features');
+                  var latest = null, listener = null;
+                  var timer = setTimeout(function () { fail(new Error('db timeout')); }, 8000);
+                  col.onSnapshot(function (snap) {
+                    latest = snapToDocs(snap);
+                    if (!settled) {
+                      settled = true;
+                      clearTimeout(timer);
+                      resolve({
+                        mode: 'shared',
+                        save: function (id, d) { return col.doc(id).set(d); },
+                        subscribe: function (cb, st) { listener = cb; st('live'); cb(latest); }
+                      });
+                    } else if (listener) listener(latest);
+                  }, function (err) {
+                    if (!settled) { clearTimeout(timer); fail(err); } else setStatus('error');
+                  });
+                }, fail);
+              } catch (e) { fail(e); }
+            });
+          }
+
+          // 2) Bundled Node backend (server.js): REST for writes, Server-Sent Events for live updates.
+          function connectServer() {
+            if (!/^https?:$/.test(location.protocol) || typeof fetch !== 'function') return Promise.reject(new Error('not served over http'));
+            return fetch('api/features', { cache: 'no-store' }).then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.json();
+            }).then(function (j) {
+              if (!j || typeof j.docs !== 'object') throw new Error('bad response');
+              return {
+                mode: 'shared',
+                save: function (id, d) {
+                  return fetch('api/features/' + encodeURIComponent(id), {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d)
+                  }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); });
+                },
+                subscribe: function (cb, st) {
+                  cb(j.docs);
+                  if (typeof EventSource !== 'function') { st('live'); return; }
+                  var es = new EventSource('api/stream');
+                  es.addEventListener('snapshot', function (e) {
+                    try { cb(JSON.parse(e.data).docs); } catch (err) { /* ignore malformed */ }
+                  });
+                  es.onopen = function () { st('live'); };
+                  es.onerror = function () { st('connecting'); };
+                }
+              };
+            });
+          }
+
+          // 3) Per-device fallback.
+          function connectLocal() {
+            var mem = {};
+            function read() {
+              try {
+                var raw = localStorage.getItem(LS_DOCS);
+                var j = raw ? JSON.parse(raw) : {};
+                mem = j && typeof j === 'object' && !Array.isArray(j) ? j : {};
+              } catch (e) { /* keep in-memory copy */ }
+              return mem;
+            }
+            return {
+              mode: 'local',
+              save: function (id, d) {
+                var all = read();
+                all[id] = d;
+                mem = all;
+                localStorage.setItem(LS_DOCS, JSON.stringify(all));
+              },
+              subscribe: function (cb, st) {
+                st('local');
+                cb(read());
+                try { window.addEventListener('storage', function (e) { if (e.key === LS_DOCS) cb(read()); }); } catch (e) { /* ignore */ }
+              }
+            };
+          }
+
+          var lastStatus = 'connecting';
+          function setStatus(s) {
+            if (s === lastStatus) return;
+            if (s === 'error') toast('Could not save. Retrying automatically…');
+            else if (s === 'local') toast('Server unavailable. Changes are saved on this device only');
+            lastStatus = s;
+          }
+
+          /* ---------- rendering ---------- */
+          function isTyping() {
+            var a = document.activeElement;
+            return !!(a && $app.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+          }
+          function flushPending() { if (pendingRemote && !isTyping() && !pointerDown) render(); }
+
+          function pill(text, cls) { return '<span class="pill ' + (cls || '') + ' h-' + slug(text) + '">' + esc(text) + '</span>'; }
+          function bar(p, lg) { return '<div class="bar' + (lg ? ' lg' : '') + '"><i class="' + (p >= 100 ? 'full' : '') + '" style="width:' + clampPct(p) + '%"></i></div>'; }
+          var ICON_TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>';
+
+          function initials(name) {
+            var parts = String(name).trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return '';
+            return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : (parts[0][1] || ''))).toUpperCase();
+          }
+          function avatar(name, cls) {
+            name = String(name || '').trim();
+            if (!name) return '<span class="av unset ' + (cls || '') + '" title="Unassigned">?</span>';
+            var hash = 0;
+            for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.toLowerCase().charCodeAt(i)) >>> 0;
+            var idx = TEAM.map(function (n) { return n.toLowerCase(); }).indexOf(name.toLowerCase());
+            var color = AV_COLORS[(idx >= 0 ? idx : hash) % AV_COLORS.length];
+            return '<span class="av ' + (cls || '') + '" style="--avb:' + color[0] + ';--avf:' + color[1] + '" title="' + esc(name) + '">' + esc(initials(name)) + '</span>';
+          }
+          function who(name, emptyText) {
+            return '<span class="who">' + avatar(name) + '<span>' + (String(name || '').trim() ? esc(name) : '<em class="muted">' + esc(emptyText || 'Unassigned') + '</em>') + '</span></span>';
+          }
+          function avatarStack(names, max) {
+            max = max || 3;
+            if (!names.length) return '<span class="stack">' + avatar('') + '</span>';
+      var cut = names.length > max ? max - 1 : max;
+      var shown = names.slice(0, cut).map(function (n) { return avatar(n); }).join('');
+      var extra = names.length > cut ? '<span class="av more" title="' + esc(names.slice(cut).join(', ')) + '">+' + (names.length - cut) + '</span>' : '';
+            return '<span class="stack" title="' + esc(names.join(', ')) + '">' + shown + extra + '</span>';
+          }
+          function ownerPicker(phase, owners) {
+            var names = TEAM.slice();
+            owners.forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });
+            var open = state.openPicker === phase;
+            return '<div class="owners-field"><span>Owners</span><details class="picker" data-picker="' + phase + '"' + (open ? ' open' : '') + '>' +
+              '<summary>' + avatarStack(owners, 3) + '<span class="names">' + (owners.length ? esc(owners.join(', ')) : '<span class="muted">Unassigned</span>') + '</span></summary>' +
+              '<div class="picker-menu">' + names.map(function (n) {
+                return '<label class="opt"><input type="checkbox" data-owner-toggle="' + phase + '" data-focus="ow-' + phase + '-' + esc(slug(n)) + '" value="' + esc(n) + '"' +
+                  (owners.indexOf(n) >= 0 ? ' checked' : '') + '>' + avatar(n) + '<span>' + esc(n) + '</span></label>';
+              }).join('') + '</div></details></div>';
+          }
+          function ownerChips(phase) {
+            return '<div class="chips">' + TEAM.map(function (n) {
+              return '<label class="chip"><input type="checkbox" data-new-owner="' + phase + '" value="' + esc(n) + '"><span>' + avatar(n) + esc(n) + '</span></label>';
+            }).join('') + '</div>';
+          }
+          function personOptions(value) {
+            var names = TEAM.slice();
+            if (value && names.indexOf(value) < 0) names.push(value);
+            return '<option value="">Unassigned</option>' + names.map(function (n) {
+              return '<option value="' + esc(n) + '"' + (n === value ? ' selected' : '') + '>' + esc(n) + '</option>';
+            }).join('');
+          }
+
+          function render(scrollTop) {
+            var v = state.view;
+            if (v !== 'overview') {
+              var ok = ID_RE.test(v) && allIds().indexOf(v) >= 0 && !getF(v).deleted;
+              if (!ok) v = state.view = 'overview';
+            }
+            var a = document.activeElement;
+            var key = a && $app.contains(a) ? a.getAttribute('data-focus') : null;
+            var s1 = null, s2 = null;
+            try { if (key && typeof a.selectionStart === 'number') { s1 = a.selectionStart; s2 = a.selectionEnd; } } catch (e) { /* not selectable */ }
+
+            renderTabs(v);
+            $app.innerHTML = v === 'overview' ? viewOverview() : viewFeature(getF(v));
+            document.title = (v === 'overview' ? 'Overview' : displayName(getF(v))) + ' · Feature Tracker';
+
+            if (key) {
+              var el = $app.querySelector('[data-focus="' + key + '"]');
+              if (el) {
+                el.focus({ preventScroll: true });
+                try { if (s1 != null) el.setSelectionRange(s1, s2); } catch (e) { /* not selectable */ }
+              }
+            }
+            if (scrollTop) window.scrollTo(0, 0);
+            pendingRemote = false;
+          }
+
+          function renderTabs(v) {
+            var fs = activeFeatures();
+            var cur = v !== 'overview' ? getF(v) : null;
+            if (cur && cur.archived) fs = fs.concat([cur]);
+            var h = '<button type="button" class="tab' + (v === 'overview' ? ' active' : '') + '" data-action="nav" data-id="overview"' + (v === 'overview' ? ' aria-current="page"' : '') + '>Overview</button>';
+            fs.forEach(function (f) {
+              var d = derive(f), act = v === f.id;
+              h += '<button type="button" class="tab' + (act ? ' active' : '') + '" data-action="nav" data-id="' + esc(f.id) + '"' + (act ? ' aria-current="page"' : '') + ' title="' + esc(displayName(f)) + ' · ' + esc(d.health) + '">' +
+                '<span class="tdot h-' + slug(d.health) + '"></span><span class="tl">' + esc(displayName(f)) + '</span></button>';
+            });
+            h += '<button type="button" class="tab tab-add" data-action="add-feature">+ New feature</button>';
+            $tabs.innerHTML = h;
+          }
+
+          function featureCard(x) {
+            var f = x.f, d = x.d, si = shipInfo(d);
+            var mini = PHASES.map(function (p) {
+              return '<div class="mini-row own"><span class="muted">' + p + '</span>' + bar(d.phases[p].pct) + '<b>' + d.phases[p].pct + '%</b>' + avatarStack(f.phases[p].owners, 2) + '</div>';
+            }).join('');
+            return '<article class="card fcard h-' + slug(d.health) + '" data-action="nav" data-id="' + esc(f.id) + '" tabindex="0" role="link" aria-label="Open ' + esc(displayName(f)) + '">' +
+              '<div class="fcard-top"><div style="min-width:0"><h3>' + esc(displayName(f)) + '</h3><p class="muted" style="margin-top:6px">' + who(f.lead, 'No lead') + '</p></div>' + pill(d.health) + '</div>' +
+              '<div class="prog"><div class="big"><b>' + Math.round(d.overall) + '%</b><span>complete</span><span class="cur">' +
+              (d.current === 'All done' ? 'All phases done' : esc(d.current)) + '</span></div>' + bar(d.overall) + '</div>' +
+              '<div class="mini">' + mini + '</div>' +
+              '<div class="fcard-foot"><span>' + (f.target ? 'Target <b>' + esc(fmtDate(f.target)) + '</b> · ' : '') + '<span class="' + si.cls + '">' + esc(si.text) + '</span></span>' +
+              '<span class="muted">Updated ' + (d.lastUpdate ? esc(fmtDate(d.lastUpdate, { month: 'short', day: 'numeric' })) : 'never') + '</span></div>' +
+              '</article>';
+          }
+
+          function viewOverview() {
+            var fs = activeFeatures().map(function (f) { return { f: f, d: derive(f) }; });
+            var archived = liveFeatures().filter(function (f) { return f.archived; });
+            function count(h) { return fs.filter(function (x) { return x.d.health === h; }).length; }
+            var stats = [['Features', fs.length, 'none'], ['On Track', count('On Track'), 'on-track'],
+              ['On Hold', count('On Hold'), 'on-hold'], ['Completed', count('Completed'), 'completed']];
+
+            var h = '<div class="page-head"><div><h1>Overview</h1><p class="muted">' + esc(fmtDate(today(), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })) +
+              ' · ' + plural(fs.length, 'active feature') + '</p></div><button type="button" class="btn primary" data-action="add-feature">+ Add feature</button></div>';
+            h += '<section class="card stats">' + stats.map(function (s) {
+              return '<div class="stat h-' + s[2] + '"><div class="k">' + s[0] + '</div><div class="v">' + s[1] + '</div></div>';
+            }).join('') + '</section>';
+
+            h += '<h2 class="sec-title">Features</h2>';
+            h += fs.length ? '<section class="fgrid">' + fs.map(featureCard).join('') + '</section>'
+              : '<div class="card"><div class="empty"><strong>No active features</strong><span>Add a feature to start tracking it.</span><button type="button" class="btn primary" data-action="add-feature">+ Add feature</button></div></div>';
+
+            var ents = [];
+            fs.forEach(function (x) { x.f.log.forEach(function (e) { ents.push({ f: x.f, e: e }); }); });
+            ents.sort(function (a, b) { return cmpEntry(b.e, a.e); });
+            ents = ents.slice(0, 8);
+            h += '<h2 class="sec-title">Recent updates</h2><section class="card">';
+            if (!ents.length) {
+              h += '<div class="empty"><strong>No updates yet</strong><span>Daily updates from every feature will show up here.</span></div>';
+            } else {
+              h += '<ul class="feed">' + ents.map(function (x) {
+                var e = x.e;
+                return '<li class="upd"><div class="upd-head">' +
+                  '<button type="button" class="link" data-action="nav" data-id="' + esc(x.f.id) + '">' + esc(displayName(x.f)) + '</button>' +
+                  '<span class="tag">' + esc(e.phase) + '</span><b>' + e.pct + '%</b>' + pill(e.health, 'sm') +
+                  '<span class="upd-meta">' + esc(fmtDate(e.date)) + (e.by ? ' · by ' + esc(e.by) : '') + '</span></div>' +
+                  '<p class="prewrap">' + esc(e.work) + '</p>' +
+                  (e.blockers.trim() ? '<p class="blk prewrap"><strong>Blockers:</strong> ' + esc(e.blockers) + '</p>' : '') +
+                  '</li>';
+              }).join('') + '</ul>';
+            }
+            h += '</section>';
+
+            if (archived.length) {
+              h += '<h2 class="sec-title">Archived <span class="count">' + archived.length + '</span> <button type="button" class="link" data-action="toggle-archived">' + (state.showArchived ? 'Hide' : 'Show') + '</button></h2>';
+              if (state.showArchived) {
+                h += '<section class="card">' + archived.map(function (f) {
+                  var d = derive(f);
+                  return '<div class="arch-row"><div class="grow"><strong>' + esc(displayName(f)) + '</strong><div class="muted" style="font-size:13px">Lead: ' + (f.lead ? esc(f.lead) : '—') +
+                    ' · ' + Math.round(d.overall) + '% · last update ' + esc(fmtDate(d.lastUpdate)) + '</div></div>' + pill(d.health) +
+                    '<div class="acts"><button type="button" class="btn sm" data-action="nav" data-id="' + esc(f.id) + '">Open</button>' +
+                    '<button type="button" class="btn sm" data-action="restore" data-id="' + esc(f.id) + '">Restore</button>' +
+                    '<button type="button" class="btn sm danger" data-action="delete-feature" data-id="' + esc(f.id) + '">Delete</button></div></div>';
+                }).join('') + '</section>';
+              }
+            }
+            return h;
+          }
+
+          function getDraft(f, d) {
+            var x = state.drafts[f.id];
+            var ph = d.current === 'All done' ? 'Review and Shipping' : d.current;
+            var health = HEALTH.indexOf(d.phases[ph].health) >= 0 ? d.phases[ph].health : 'On Track';
+            if (!x) {
+              x = state.drafts[f.id] = {
+                date: today(), phase: ph, pct: '', health: health,
+                by: lsGet(LS_BY) || '', work: '', blockers: '', touched: false
+              };
+            } else if (!x.touched) {
+              x.phase = ph;
+              x.health = health;
+            }
+            return x;
+          }
+
+          function chartSvg(f) {
+            var seen = {};
+            f.log.forEach(function (e) { seen[e.date] = 1; });
+            var dates = Object.keys(seen).sort();
+            if (!dates.length) {
+              return '<div class="empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>' +
+                '<strong>No progress yet</strong><span>Add the first daily update to start the chart.</span></div>';
+            }
+            var pts = dates.map(function (d) {
+              return { d: d, v: weighted(phasePcts(f.log.filter(function (e) { return e.date <= d; }))) };
+            });
+            var W = 640, H = 260, L = 44, R = 22, T = 22, B = 36, iw = W - L - R, ih = H - T - B;
+            var t0 = dnum(dates[0]), span = dnum(dates[dates.length - 1]) - t0;
+            function X(d) { return span ? L + (dnum(d) - t0) / span * iw : L + iw / 2; }
+            function Y(v) { return T + ih - (v / 100) * ih; }
+            var g = '';
+            [0, 25, 50, 75, 100].forEach(function (y) {
+              g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(y) + '" y2="' + Y(y) + '"/>' +
+                '<text class="ylab" x="' + (L - 8) + '" y="' + Y(y) + '" text-anchor="end" dominant-baseline="middle">' + y + '%</text>';
+            });
+            var n = pts.length, idx = {};
+            if (n <= 6) pts.forEach(function (p, i) { idx[i] = 1; });
+            else for (var k = 0; k < 6; k++) idx[Math.round(k * (n - 1) / 5)] = 1;
+            Object.keys(idx).forEach(function (i) {
+              i = +i;
+              var anchor = n === 1 ? 'middle' : i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
+              g += '<text class="xlab" x="' + X(pts[i].d).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="' + anchor + '">' + esc(fmtDate(pts[i].d, { month: 'short', day: 'numeric' })) + '</text>';
+            });
+            var line = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p.d).toFixed(1) + ' ' + Y(p.v).toFixed(1); }).join(' ');
+            if (n > 1) g += '<path class="area" d="' + line + ' L' + X(pts[n - 1].d).toFixed(1) + ' ' + Y(0) + ' L' + X(pts[0].d).toFixed(1) + ' ' + Y(0) + ' Z"/>';
+            g += '<path class="line" d="' + line + '"/>';
+            pts.forEach(function (p) {
+              g += '<circle class="pt" cx="' + X(p.d).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="4.5"><title>' + esc(fmtDate(p.d)) + ': ' + Math.round(p.v) + '% overall</title></circle>';
+            });
+            var last = pts[n - 1];
+            g += '<text class="vlab" x="' + X(last.d).toFixed(1) + '" y="' + (Y(last.v) - 12).toFixed(1) + '" text-anchor="' + (n === 1 ? 'middle' : 'end') + '">' + Math.round(last.v) + '%</text>';
+            return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Overall progress by day">' + g + '</svg>' +
+              '<p class="chart-note">Overall % as of each day with updates (' + plural(n, 'day') + ' logged).</p>';
+          }
+
+          function viewFeature(f) {
+            var d = derive(f), id = esc(f.id), si = shipInfo(d), dr = getDraft(f, d);
+            var drPhase = PHASES.indexOf(dr.phase) >= 0 ? dr.phase : PHASES[0];
+            var err = state.errors[f.id];
+
+            var h = '<button type="button" class="link back" data-action="nav" data-id="overview">&larr; Back to overview</button>';
+            h += '<section class="card hero">' +
+              '<div><input class="title-input" data-field="name" data-focus="name" value="' + esc(f.name) + '" maxlength="80" placeholder="Feature ' + idNum(f.id) + '" aria-label="Feature name">' +
+              '<div class="hero-meta">' + pill(d.health) + '<span class="sep"></span><span class="muted">Current phase: <b style="color:var(--ink)">' + esc(d.current) + '</b></span>' +
+              '<span class="sep"></span><span class="' + si.cls + '" style="font-weight:650">' + esc(si.text) + '</span>' +
+              (d.lastUpdate ? '<span class="sep"></span><span class="muted">Last update ' + esc(fmtDate(d.lastUpdate)) + '</span>' : '') + '</div>' +
+              '<div class="fields">' +
+              '<label>Lead<select data-field="lead" data-focus="lead">' + personOptions(f.lead) + '</select></label>' +
+              '<label>Start date<input type="date" data-field="start" data-focus="start" value="' + esc(f.start) + '"></label>' +
+              '<label>Target ship date<input type="date" data-field="target" data-focus="target" value="' + esc(f.target) + '"></label>' +
+              '</div></div>' +
+              '<div class="hero-side"><span class="k-sm">Overall progress</span><div class="big"><b>' + Math.round(d.overall) + '%</b></div>' + bar(d.overall) +
+              '<span class="k-sm">' + PHASES.filter(function (p) { return d.phases[p].pct >= 100; }).length + ' of 4 phases complete</span></div>' +
+              '<div class="hero-actions">' +
+              (f.archived ? '<button type="button" class="btn sm" data-action="restore" data-id="' + id + '">Restore to active</button>'
+                : '<button type="button" class="btn sm" data-action="archive" data-id="' + id + '">Archive</button>') +
+              '<button type="button" class="btn sm danger" data-action="delete-feature" data-id="' + id + '">Delete feature</button></div>' +
+              '</section>';
+
+            if (f.archived) {
+              h += '<div class="banner arch"><span>This feature is archived. It is hidden from the overview.</span><button type="button" class="btn sm" data-action="restore" data-id="' + id + '">Restore</button></div>';
+            } else if (d.overall >= 100) {
+              h += '<div class="banner"><span>All phases are complete. Archive this feature to keep the overview focused, then add the next one.</span>' +
+                '<span style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm" data-action="archive" data-id="' + id + '">Archive</button>' +
+                '<button type="button" class="btn sm primary" data-action="add-feature">+ New feature</button></span></div>';
+            }
+
+            h += '<h2 class="sec-title">Phases</h2><section class="phases">' + PHASES.map(function (p, i) {
+              var ph = d.phases[p], plan = f.phases[p];
+              var warn = plan.start && plan.end && plan.end < plan.start ? '<p class="hint t-warn">Planned end is before planned start.</p>' : '';
+              return '<div class="card phase"><div class="phase-top"><span class="pnum">' + (i + 1) + '</span><h3>' + p + '</h3></div>' +
+                '<div class="phase-pct"><b>' + ph.pct + '%</b>' + bar(ph.pct, true) + '</div>' +
+                '<dl class="kv"><div><dt>Status</dt><dd>' + pill(ph.status, 'sm') + '</dd></div>' +
+                '<div><dt>Health</dt><dd>' + pill(ph.health, 'sm') + '</dd></div>' +
+                '<div><dt>Schedule</dt><dd>' + pill(ph.schedule, 'sm') + '</dd></div></dl>' +
+                ownerPicker(p, plan.owners) +
+                '<div class="dates"><label>Planned start<input type="date" data-phase="' + p + '" data-pk="start" data-focus="p-' + p + '-start" value="' + esc(plan.start) + '"></label>' +
+                '<label>Planned end<input type="date" data-phase="' + p + '" data-pk="end" data-focus="p-' + p + '-end" value="' + esc(plan.end) + '"></label></div>' + warn +
+                '</div>';
+            }).join('') + '</section>';
+
+            h += '<div class="grid2" style="margin-top:16px">';
+            h += '<section class="card"><h2>Day-wise progress</h2>' + chartSvg(f) + '</section>';
+            h += '<section class="card"><h2>Add today\'s update</h2><form id="addForm" class="form" novalidate autocomplete="off">' +
+              '<div class="frow"><label>Date <input type="date" data-draft="date" data-focus="d-date" value="' + esc(dr.date) + '" required></label>' +
+              '<label>Phase<select data-draft="phase" data-focus="d-phase">' + PHASES.map(function (p) {
+                return '<option value="' + p + '"' + (p === drPhase ? ' selected' : '') + '>' + p + ' (' + d.phases[p].pct + '%)</option>';
+              }).join('') + '</select></label></div>' +
+              '<div class="frow"><label>Phase % complete (cumulative) <input type="number" min="0" max="100" step="1" inputmode="numeric" data-draft="pct" data-focus="d-pct" value="' + esc(dr.pct) + '" placeholder="Currently ' + d.phases[drPhase].pct + '%" required></label>' +
+              '<label>Health<select data-draft="health" data-focus="d-health">' + HEALTH.map(function (x) {
+                return '<option' + (x === dr.health ? ' selected' : '') + '>' + x + '</option>';
+              }).join('') + '</select></label></div>' +
+              '<label>Updated by<select data-draft="by" data-focus="d-by">' + personOptions(dr.by).replace('>Unassigned<', '>Select your name<') + '</select></label>' +
+              '<label><span>Work done <span class="req" aria-hidden="true">*</span></span><textarea data-draft="work" data-focus="d-work" rows="3" maxlength="2000" placeholder="What got done today?" required>' + esc(dr.work) + '</textarea></label>' +
+              '<label>Blockers (optional)<textarea data-draft="blockers" data-focus="d-blockers" rows="2" maxlength="2000" placeholder="Anything slowing you down?">' + esc(dr.blockers) + '</textarea></label>' +
+              (err ? '<div class="form-err" role="alert">' + esc(err) + '</div>' : '') +
+              '<button type="submit" class="btn primary">Add update</button></form></section>';
+            h += '</div>';
+
+            var rows = f.log.slice().sort(cmpEntry).reverse();
+            h += '<section class="card" style="margin-top:16px"><h2>Daily log <span class="count">' + rows.length + '</span></h2>';
+            if (!rows.length) {
+              h += '<div class="empty"><strong>No entries yet</strong><span>Each update you add appears here, newest first.</span></div>';
+            } else {
+              h += '<div class="table-wrap"><table class="log"><thead><tr><th>Date</th><th>Phase</th><th>%</th><th>Health</th><th>Work done</th><th>Blockers</th><th>By</th><th><span class="muted" style="font-size:0">Actions</span></th></tr></thead><tbody>' +
+                rows.map(function (e) {
+                  return '<tr><td class="nowrap" data-label="Date">' + esc(fmtDate(e.date)) + '</td>' +
+                    '<td data-label="Phase"><span class="tag">' + esc(e.phase) + '</span></td>' +
+                    '<td data-label="%"><b>' + e.pct + '%</b></td>' +
+                    '<td data-label="Health">' + pill(e.health, 'sm') + '</td>' +
+                    '<td class="txt prewrap" data-label="Work done">' + esc(e.work) + '</td>' +
+                    '<td class="txt prewrap" data-label="Blockers">' + (e.blockers.trim() ? '<span class="t-bad">' + esc(e.blockers) + '</span>' : '<span class="muted">—</span>') + '</td>' +
+                    '<td data-label="By">' + (e.by ? esc(e.by) : '<span class="muted">—</span>') + '</td>' +
+                    '<td class="act"><button type="button" class="icon-btn" data-action="del-entry" data-id="' + esc(e.id) + '" aria-label="Delete entry from ' + esc(fmtDate(e.date)) + '" title="Delete entry">' + ICON_TRASH + '</button></td></tr>';
+                }).join('') + '</tbody></table></div>';
+            }
+            h += '</section>';
+            return h;
+          }
+
+          /* ---------- actions ---------- */
+          function closePickers() {
+            state.openPicker = null;
+            $app.querySelectorAll('details.picker[open]').forEach(function (d) { d.removeAttribute('open'); });
+          }
+          $app.addEventListener('toggle', function (e) {
+            var el = e.target;
+            if (!el.classList || !el.classList.contains('picker')) return;
+            var p = el.getAttribute('data-picker');
+            if (el.open) {
+              state.openPicker = p;
+              $app.querySelectorAll('details.picker[open]').forEach(function (d) { if (d !== el) d.removeAttribute('open'); });
+            } else if (state.openPicker === p) {
+              state.openPicker = null;
+            }
+          }, true);
+          document.addEventListener('click', function (e) {
+            if (state.openPicker && !e.target.closest('.picker')) closePickers();
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && state.openPicker) closePickers();
+          });
+
+          function go(view) {
+            state.openPicker = null;
+            var hash = view === 'overview' ? '#/' : '#/' + view;
+            if (location.hash === hash) { state.view = view; render(true); }
+            else location.hash = hash;
+          }
+          function parseHash() {
+            var h = location.hash.replace(/^#\/?/, '');
+            return ID_RE.test(h) ? h : 'overview';
+          }
+          function nextFeatureId() {
+            var n = allIds().reduce(function (m, id) { return Math.max(m, idNum(id)); }, 0) + 1;
+            return 'f' + n;
+          }
+          function openNewFeature() {
+            var id = nextFeatureId();
+            if (!ID_RE.test(id)) { toast('Feature limit reached'); return; }
+            var owners = PHASES.map(function (p) {
+              return '<div class="owner-block"><span class="pn">' + p + '</span>' + ownerChips(p) + '</div>';
+            }).join('');
+            $modal.innerHTML = '<div class="modal-back" data-action="modal-close">' +
+              '<form class="card modal" id="newFeatureForm" role="dialog" aria-modal="true" aria-labelledby="nfTitle" novalidate autocomplete="off">' +
+              '<h2 id="nfTitle">New feature</h2><p class="sub">Set the lead and who works on each phase. Pick as many people as needed. You can change all of this later.</p>' +
+              '<div class="form">' +
+              '<label><span>Feature name <span class="req" aria-hidden="true">*</span></span><input name="name" maxlength="80" placeholder="e.g. Checkout redesign" required></label>' +
+              '<label>Lead<select name="lead">' + personOptions('') + '</select></label>' +
+              '<div class="frow"><label>Start date<input type="date" name="start" value="' + today() + '"></label>' +
+              '<label>Target ship date<input type="date" name="target"></label></div>' +
+              '</div>' +
+              '<div class="modal-sec"><span>Phase owners</span><button type="button" class="link" data-action="fill-owners" style="font-size:13px">Assign all to lead</button></div>' +
+              '<div class="owners">' + owners + '</div>' +
+              '<div class="form-err" id="nfErr" role="alert" hidden></div>' +
+              '<div class="modal-actions"><button type="button" class="btn" data-action="modal-close">Cancel</button>' +
+              '<button type="submit" class="btn primary">Create feature</button></div>' +
+              '</form></div>';
+            var first = $modal.querySelector('input[name="name"]');
+            if (first) first.focus();
+          }
+          function closeModal() { $modal.innerHTML = ''; }
+
+          function createFeature(form) {
+            var get = function (n) { var el = form.elements[n]; return el ? String(el.value) : ''; };
+            var name = get('name').trim();
+            var err = form.querySelector('#nfErr');
+            var start = get('start'), target = get('target');
+            var msg = !name ? 'Please give the feature a name.'
+              : (start && target && isDate(start) && isDate(target) && target < start) ? 'Target ship date is before the start date.' : '';
+            if (msg) {
+              err.textContent = msg;
+              err.hidden = false;
+              if (!name) form.elements.name.focus();
+              return;
+            }
+            var id = nextFeatureId();
+            if (!ID_RE.test(id)) { toast('Feature limit reached'); return; }
+            var phases = {};
+            PHASES.forEach(function (p) {
+              var picked = [];
+              form.querySelectorAll('[data-new-owner="' + p + '"]').forEach(function (c) { if (c.checked) picked.push(c.value); });
+              phases[p] = { start: '', end: '', owners: picked };
+            });
+            state.docs[id] = normFeature({ name: name, lead: get('lead'), start: start, target: target, phases: phases }, id);
+            touch(id);
+            closeModal();
+            go(id);
+            toast(displayName(state.docs[id]) + ' created');
+          }
+
+          $modal.addEventListener('submit', function (e) {
+            if (e.target.id !== 'newFeatureForm') return;
+            e.preventDefault();
+            createFeature(e.target);
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && $modal.firstChild) closeModal();
+          });
+
+          document.addEventListener('click', function (e) {
+            var el = e.target.closest('[data-action]');
+            if (!el) return;
+            var a = el.getAttribute('data-action'), id = el.getAttribute('data-id');
+            var f;
+            switch (a) {
+              case 'nav': e.preventDefault(); go(id === 'overview' ? 'overview' : id); break;
+              case 'add-feature': openNewFeature(); break;
+              case 'modal-close':
+                if (el.classList.contains('modal-back') && e.target !== el) return;
+                closeModal(); break;
+              case 'fill-owners': {
+                var form = document.getElementById('newFeatureForm');
+                if (!form) return;
+                var lead = form.elements.lead.value;
+                if (!lead) { toast('Pick a lead first'); return; }
+                form.querySelectorAll('[data-new-owner]').forEach(function (c) { c.checked = c.value === lead; });
+                break;
+              }
+              case 'toggle-archived': state.showArchived = !state.showArchived; render(); break;
+              case 'archive':
+                f = getF(id); f.archived = true; touch(id); toast(displayName(f) + ' archived'); go('overview'); break;
+              case 'restore':
+                f = getF(id); f.archived = false; touch(id); toast(displayName(f) + ' restored'); render(); break;
+              case 'delete-feature':
+                f = getF(id);
+                if (!confirm('Delete "' + displayName(f) + '" and all of its updates? This cannot be undone.')) return;
+                state.docs[id] = { id: id, deleted: true };
+                delete state.drafts[id];
+                touch(id); toast('Feature deleted'); go('overview'); break;
+              case 'del-entry':
+                f = currentF();
+                if (!f || !confirm('Delete this log entry?')) return;
+                f.log = f.log.filter(function (x) { return x.id !== id; });
+                touch(f.id); render(); toast('Entry deleted'); break;
+            }
+          });
+
+          $app.addEventListener('keydown', function (e) {
+            var t = e.target;
+            if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('fcard')) {
+              e.preventDefault();
+              go(t.getAttribute('data-id'));
+            }
+          });
+
+          $app.addEventListener('input', function (e) {
+            var t = e.target, f = currentF();
+            if (!f) return;
+            var dk = t.getAttribute('data-draft');
+            if (dk) { var d0 = getDraft(f, derive(f)); d0[dk] = t.value; d0.touched = true; return; }
+            var k = t.getAttribute('data-field');
+            if (k === 'name' || k === 'lead') {
+              f[k] = t.value.slice(0, 80);
+              touch(f.id);
+              if (k === 'name') { renderTabs(f.id); document.title = displayName(f) + ' · Feature Tracker'; }
+            }
+          });
+
+          $app.addEventListener('change', function (e) {
+            var t = e.target, f = currentF();
+            if (!f) return;
+            var dk = t.getAttribute('data-draft');
+            if (dk) {
+              var dr = getDraft(f, derive(f));
+              dr[dk] = t.value;
+              dr.touched = true;
+              if (dk === 'phase') {
+                var ph = derive(f).phases[t.value];
+                if (ph && HEALTH.indexOf(ph.health) >= 0) dr.health = ph.health;
+                render();
+              }
+              return;
+            }
+            var k = t.getAttribute('data-field');
+            if (k === 'start' || k === 'target') {
+              f[k] = isDate(t.value) ? t.value : '';
+              touch(f.id); render(); return;
+            }
+            if (k === 'lead') { f.lead = t.value.slice(0, 80); touch(f.id); render(); return; }
+            var op = t.getAttribute('data-owner-toggle');
+            if (op && f.phases[op]) {
+              var list = f.phases[op].owners.filter(function (n) { return n !== t.value; });
+              if (t.checked) list.push(t.value);
+              f.phases[op].owners = sortPeople(list);
+              state.openPicker = op;
+              touch(f.id); render(); return;
+            }
+            var p = t.getAttribute('data-phase'), pk = t.getAttribute('data-pk');
+            if (p && f.phases[p] && (pk === 'start' || pk === 'end')) {
+              f.phases[p][pk] = isDate(t.value) ? t.value : '';
+              touch(f.id); render();
+            }
+          });
+
+          $app.addEventListener('submit', function (e) {
+            if (e.target.id !== 'addForm') return;
+            e.preventDefault();
+            var f = currentF();
+            if (!f) return;
+            var x = getDraft(f, derive(f));
+            var missing = [];
+            if (!isDate(x.date)) missing.push('a date');
+            if (String(x.pct).trim() === '' || !isFinite(Number(x.pct))) missing.push('the phase %');
+            if (!String(x.work).trim()) missing.push('what work was done');
+            if (missing.length) {
+              state.errors[f.id] = 'Please add ' + missing.join(', ').replace(/, ([^,]*)$/, ' and $1') + '.';
+              render();
+              return;
+            }
+            var entry = {
+              id: newEntryId(),
+              date: x.date,
+              phase: PHASES.indexOf(x.phase) >= 0 ? x.phase : PHASES[0],
+              pct: clampPct(x.pct),
+              health: HEALTH.indexOf(x.health) >= 0 ? x.health : 'On Track',
+              by: String(x.by).trim().slice(0, 80),
+              work: String(x.work).trim().slice(0, 2000),
+              blockers: String(x.blockers).trim().slice(0, 2000)
+            };
+            f.log.push(entry);
+            if (entry.by) lsSet(LS_BY, entry.by);
+            delete state.errors[f.id];
+            delete state.drafts[f.id];
+            var nd = derive(f);
+            var dr = getDraft(f, nd);
+            dr.date = entry.date;
+            dr.by = entry.by;
+            touch(f.id);
+            if (document.activeElement && $app.contains(document.activeElement)) document.activeElement.blur();
+            render();
+            toast('Update added · ' + displayName(f) + ' is now ' + Math.round(nd.overall) + '%');
+          });
+
+          $app.addEventListener('focusout', function () { setTimeout(flushPending, 0); });
+          document.addEventListener('pointerdown', function () { pointerDown = true; }, true);
+          document.addEventListener('pointerup', function () { pointerDown = false; setTimeout(flushPending, 0); }, true);
+          document.addEventListener('pointercancel', function () { pointerDown = false; setTimeout(flushPending, 0); }, true);
+
+          window.addEventListener('hashchange', function () { state.view = parseHash(); render(true); });
+          window.addEventListener('pagehide', flushAll);
+          document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushAll(); });
+          window.addEventListener('beforeunload', function (e) {
+            if (Object.keys(dirty).length) { flushAll(); e.preventDefault(); e.returnValue = ''; }
+          });
+
+          var lastDay = today();
+          setInterval(function () {
+            if (today() !== lastDay) { lastDay = today(); if (isTyping()) pendingRemote = true; else render(); }
+          }, 60000);
+
+          /* ---------- boot ---------- */
+          state.view = parseHash();
+          setStatus('connecting');
+          render();
+
+          connectPlatformDb()
+            .catch(function () { return connectServer(); })
+            .catch(function () { return connectLocal(); })
+            .then(function (s) {
+              store = s;
+              store.subscribe(applyRemote, setStatus);
+            });
+        })();
+    </script>
+  </body>
+</html>

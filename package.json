@@ -1,0 +1,16 @@
+{
+  "name": "feature-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Team feature tracker: single-file web app with a Node + MongoDB backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "mongodb": "^6.21.0"
+  }
+}
