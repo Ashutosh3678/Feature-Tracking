@@ -303,6 +303,17 @@
         align-items: center;
         gap: 8px;
       }
+      .sec-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 32px 0 12px;
+      }
+      .sec-row .sec-title {
+        margin: 0;
+      }
       .card {
         background: var(--card);
         border: 1px solid var(--line);
@@ -371,6 +382,14 @@
         padding: 3px 10px;
         font-size: 13px;
         min-height: 30px;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn:disabled:hover {
+        background: var(--card);
+        border-color: var(--line);
       }
       .icon-btn {
         appearance: none;
@@ -456,7 +475,8 @@
       .dates > *,
       .frow > *,
       .stats > *,
-      .fgrid > * {
+      .fgrid > *,
+      .log-filters > * {
         min-width: 0;
       }
 
@@ -967,6 +987,46 @@
       table.log tbody tr:hover {
         background: #fbfbf9;
       }
+      .log-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .log-head h2 {
+        margin: 0;
+      }
+      .log-filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .log-filters label {
+        font-size: 11.5px;
+        gap: 4px;
+      }
+      .log-filters input,
+      .log-filters select {
+        font-size: 13px;
+        min-height: 32px;
+        padding: 4px 8px;
+      }
+      .log-note {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: -2px 0 12px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .log-note .link {
+        margin-left: auto;
+      }
 
       /* People */
       .av {
@@ -1273,6 +1333,9 @@
         .grid2 {
           grid-template-columns: minmax(0, 1fr);
         }
+        .log-filters {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
       @media (max-width: 720px) {
         .wrap {
@@ -1346,7 +1409,8 @@
         }
       }
       @media (max-width: 560px) {
-        .phases {
+        .phases,
+        .log-filters {
           grid-template-columns: minmax(0, 1fr);
         }
         .stats {
@@ -1466,7 +1530,7 @@
           var $tabs = document.getElementById('tabs');
           var $toast = document.getElementById('toast');
           var $modal = document.getElementById('modal');
-          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null, loaded: false };
+          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null, loaded: false, logFilters: {}, feedFilter: null };
           var store = null;
           var pendingRemote = false;
           var pointerDown = false;
@@ -1950,15 +2014,54 @@
             h += fs.length ? '<section class="fgrid">' + fs.map(featureCard).join('') + '</section>'
               : '<div class="card"><div class="empty"><strong>No active features</strong><span>Add a feature to start tracking it.</span><button type="button" class="btn primary" data-action="add-feature">+ Add feature</button></div></div>';
 
-            var ents = [];
-            fs.forEach(function (x) { x.f.log.forEach(function (e) { ents.push({ f: x.f, e: e }); }); });
-            ents.sort(function (a, b) { return cmpEntry(b.e, a.e); });
-            ents = ents.slice(0, 8);
-            h += '<h2 class="sec-title">Recent updates</h2><section class="card">';
-            if (!ents.length) {
+            var allEnts = [];
+            fs.forEach(function (x) { x.f.log.forEach(function (e) { allEnts.push({ f: x.f, e: e }); }); });
+            allEnts.sort(function (a, b) { return cmpEntry(b.e, a.e); });
+            var fl = feedFilter();
+            var filtering = feedFilterActive(fl);
+            var matched = filterFeed(allEnts, fl);
+            var shown = filtering ? matched : matched.slice(0, 8);
+            var authors = logAuthors(allEnts.map(function (x) { return x.e; }), fl.by);
+            var featureOpts = fs.map(function (x) { return x.f; });
+            if (fl.feature && !featureOpts.some(function (feat) { return feat.id === fl.feature; })) {
+              var picked = getF(fl.feature);
+              if (picked && !picked.deleted) featureOpts.push(picked);
+            }
+            var rangeBad = fl.from && fl.to && fl.from > fl.to;
+            h += '<div class="sec-row"><h2 class="sec-title">Recent updates <span class="count">' +
+              (filtering ? matched.length + ' of ' + allEnts.length : shown.length) + '</span></h2>' +
+              '<button type="button" class="btn sm" data-action="export-all-logs"' + (allEnts.length ? '' : ' disabled') +
+              ' title="Download every update from every active feature">Export all CSV</button></div><section class="card">';
+            if (allEnts.length) {
+              h += '<div class="log-filters">' +
+                '<label>Search<input type="search" data-feed-filter="q" data-focus="feed-q" value="' + esc(fl.q) + '" placeholder="Work, feature, name" maxlength="200"></label>' +
+                '<label>Feature<select data-feed-filter="feature" data-focus="feed-feature"><option value="">All features</option>' +
+                featureOpts.map(function (feat) { return '<option value="' + esc(feat.id) + '"' + (fl.feature === feat.id ? ' selected' : '') + '>' + esc(displayName(feat)) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>Phase<select data-feed-filter="phase" data-focus="feed-phase"><option value="">All phases</option>' +
+                PHASES.map(function (p) { return '<option value="' + esc(p) + '"' + (fl.phase === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>Health<select data-feed-filter="health" data-focus="feed-health"><option value="">Any health</option>' +
+                HEALTH.map(function (x) { return '<option value="' + esc(x) + '"' + (fl.health === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>Updated by<select data-feed-filter="by" data-focus="feed-by"><option value="">Everyone</option><option value="__none__"' + (fl.by === '__none__' ? ' selected' : '') + '>Unassigned</option>' +
+                authors.map(function (n) { return '<option value="' + esc(n) + '"' + (fl.by === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>From<input type="date" data-feed-filter="from" data-focus="feed-from" value="' + esc(fl.from) + '"></label>' +
+                '<label>To<input type="date" data-feed-filter="to" data-focus="feed-to" value="' + esc(fl.to) + '"></label>' +
+                '</div>';
+              if (filtering) {
+                h += '<div class="log-note">' + (rangeBad ? '<span>From date is after the To date.</span>' : '') +
+                  '<button type="button" class="link" data-action="clear-feed-filter">Clear filters</button></div>';
+              }
+            }
+            if (!allEnts.length) {
               h += '<div class="empty"><strong>No updates yet</strong><span>Daily updates from every feature will show up here.</span></div>';
+            } else if (!shown.length) {
+              h += '<div class="empty"><strong>No matching updates</strong><span>Try another feature, person, or date range.</span>' +
+                '<button type="button" class="btn sm" data-action="clear-feed-filter">Clear filters</button></div>';
             } else {
-              h += '<ul class="feed">' + ents.map(function (x) {
+              h += '<ul class="feed">' + shown.map(function (x) {
                 var e = x.e;
                 return '<li class="upd"><div class="upd-head">' +
                   '<button type="button" class="link" data-action="nav" data-id="' + esc(x.f.id) + '">' + esc(displayName(x.f)) + '</button>' +
@@ -1968,6 +2071,9 @@
                   (e.blockers.trim() ? '<p class="blk prewrap"><strong>Blockers:</strong> ' + esc(e.blockers) + '</p>' : '') +
                   '</li>';
               }).join('') + '</ul>';
+              if (!filtering && allEnts.length > shown.length) {
+                h += '<p class="chart-note">Showing the ' + shown.length + ' latest of ' + allEnts.length + ' updates. Filters search the full list.</p>';
+              }
             }
             h += '</section>';
 
@@ -2043,6 +2149,106 @@
               '<p class="chart-note">Overall % as of each day with updates (' + plural(n, 'day') + ' logged).</p>';
           }
 
+          function emptyLogFilter() {
+            return { q: '', phase: '', health: '', by: '', from: '', to: '' };
+          }
+          function logFilter(id) {
+            if (!state.logFilters[id]) state.logFilters[id] = emptyLogFilter();
+            return state.logFilters[id];
+          }
+          function logFilterActive(fl) {
+            return !!(String(fl.q).trim() || fl.phase || fl.health || fl.by || fl.from || fl.to);
+          }
+          function feedFilter() {
+            if (!state.feedFilter) state.feedFilter = { q: '', feature: '', phase: '', health: '', by: '', from: '', to: '' };
+            return state.feedFilter;
+          }
+          function feedFilterActive(fl) {
+            return !!(String(fl.q).trim() || fl.feature || fl.phase || fl.health || fl.by || fl.from || fl.to);
+          }
+          function filterFeed(ents, fl) {
+            var q = String(fl.q || '').trim().toLowerCase();
+            return ents.filter(function (x) {
+              var e = x.e;
+              if (fl.feature && x.f.id !== fl.feature) return false;
+              if (fl.phase && e.phase !== fl.phase) return false;
+              if (fl.health && e.health !== fl.health) return false;
+              if (fl.by === '__none__') { if (e.by) return false; }
+              else if (fl.by && e.by !== fl.by) return false;
+              if (fl.from && e.date < fl.from) return false;
+              if (fl.to && e.date > fl.to) return false;
+              if (q) {
+                var hay = (displayName(x.f) + '\n' + e.work + '\n' + e.blockers + '\n' + e.by + '\n' + e.phase + '\n' + e.health).toLowerCase();
+                if (hay.indexOf(q) < 0) return false;
+              }
+              return true;
+            });
+          }
+          function applyFeedFilter(key, value) {
+            var fl = feedFilter();
+            if (key === 'from' || key === 'to') fl[key] = isDate(value) ? value : '';
+            else if (key === 'phase') fl.phase = PHASES.indexOf(value) >= 0 ? value : '';
+            else if (key === 'health') fl.health = HEALTH.indexOf(value) >= 0 ? value : '';
+            else if (key === 'feature') fl.feature = ID_RE.test(value) ? value : '';
+            else if (key === 'by') fl.by = String(value).slice(0, 80);
+            else fl[key] = String(value).slice(0, 200);
+          }
+          function filterLog(rows, fl) {
+            var q = String(fl.q || '').trim().toLowerCase();
+            return rows.filter(function (e) {
+              if (fl.phase && e.phase !== fl.phase) return false;
+              if (fl.health && e.health !== fl.health) return false;
+              if (fl.by === '__none__') { if (e.by) return false; }
+              else if (fl.by && e.by !== fl.by) return false;
+              if (fl.from && e.date < fl.from) return false;
+              if (fl.to && e.date > fl.to) return false;
+              if (q) {
+                var hay = (e.work + '\n' + e.blockers + '\n' + e.by + '\n' + e.phase + '\n' + e.health).toLowerCase();
+                if (hay.indexOf(q) < 0) return false;
+              }
+              return true;
+            });
+          }
+          function logAuthors(rows, selected) {
+            var names = TEAM.slice();
+            rows.forEach(function (e) {
+              var n = String(e.by || '').trim();
+              if (n && names.indexOf(n) < 0) names.push(n);
+            });
+            if (selected && selected !== '__none__' && names.indexOf(selected) < 0) names.push(selected);
+            return names;
+          }
+          function csvCell(v) {
+            var s = String(v == null ? '' : v);
+            if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+          }
+          function csvFilename(f) {
+            var base = displayName(f).replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
+            return (base || 'feature') + '-log.csv';
+          }
+          function downloadCsv(filename, featureName, rows) {
+            downloadRowsCsv(filename, rows.map(function (e) {
+              return { feature: featureName, date: e.date, phase: e.phase, pct: e.pct, health: e.health, work: e.work, blockers: e.blockers, by: e.by };
+            }));
+          }
+          function downloadRowsCsv(filename, rows) {
+            var header = ['Feature', 'Date', 'Phase', 'Percent', 'Health', 'Work done', 'Blockers', 'Updated by'];
+            var lines = [header.map(csvCell).join(',')];
+            rows.forEach(function (e) {
+              lines.push([e.feature, e.date, e.phase, e.pct, e.health, e.work, e.blockers, e.by].map(csvCell).join(','));
+            });
+            var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+          }
+
           function viewFeature(f) {
             var d = derive(f), id = esc(f.id), si = shipInfo(d), dr = getDraft(f, d);
             var drPhase = PHASES.indexOf(dr.phase) >= 0 ? dr.phase : PHASES[0];
@@ -2108,10 +2314,41 @@
               '<button type="submit" class="btn primary">Add update</button></form></section>';
             h += '</div>';
 
-            var rows = f.log.slice().sort(cmpEntry).reverse();
-            h += '<section class="card" style="margin-top:16px"><h2>Daily log <span class="count">' + rows.length + '</span></h2>';
-            if (!rows.length) {
+            var allRows = f.log.slice().sort(cmpEntry).reverse();
+            var fl = logFilter(f.id);
+            var rows = filterLog(allRows, fl);
+            var filtering = logFilterActive(fl);
+            var authors = logAuthors(allRows, fl.by);
+            var rangeBad = fl.from && fl.to && fl.from > fl.to;
+            h += '<section class="card" style="margin-top:16px"><div class="log-head"><h2>Daily log <span class="count">' +
+              (filtering ? rows.length + ' of ' + allRows.length : allRows.length) + '</span></h2>' +
+              '<button type="button" class="btn sm" data-action="export-log"' + (allRows.length ? '' : ' disabled') +
+              ' title="Download every log entry for this feature">Export all CSV</button></div>';
+            if (allRows.length) {
+              h += '<div class="log-filters">' +
+                '<label>Search<input type="search" data-log-filter="q" data-focus="log-q" value="' + esc(fl.q) + '" placeholder="Work, blockers, name" maxlength="200"></label>' +
+                '<label>Phase<select data-log-filter="phase" data-focus="log-phase"><option value="">All phases</option>' +
+                PHASES.map(function (p) { return '<option value="' + esc(p) + '"' + (fl.phase === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>Health<select data-log-filter="health" data-focus="log-health"><option value="">Any health</option>' +
+                HEALTH.map(function (x) { return '<option value="' + esc(x) + '"' + (fl.health === x ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>Updated by<select data-log-filter="by" data-focus="log-by"><option value="">Everyone</option><option value="__none__"' + (fl.by === '__none__' ? ' selected' : '') + '>Unassigned</option>' +
+                authors.map(function (n) { return '<option value="' + esc(n) + '"' + (fl.by === n ? ' selected' : '') + '>' + esc(n) + '</option>'; }).join('') +
+                '</select></label>' +
+                '<label>From<input type="date" data-log-filter="from" data-focus="log-from" value="' + esc(fl.from) + '"></label>' +
+                '<label>To<input type="date" data-log-filter="to" data-focus="log-to" value="' + esc(fl.to) + '"></label>' +
+                '</div>';
+              if (filtering) {
+                h += '<div class="log-note">' + (rangeBad ? '<span>From date is after the To date.</span>' : '') +
+                  '<button type="button" class="link" data-action="clear-log-filter">Clear filters</button></div>';
+              }
+            }
+            if (!allRows.length) {
               h += '<div class="empty"><strong>No entries yet</strong><span>Each update you add appears here, newest first.</span></div>';
+            } else if (!rows.length) {
+              h += '<div class="empty"><strong>No matching entries</strong><span>Try another phase, person, or date range.</span>' +
+                '<button type="button" class="btn sm" data-action="clear-log-filter">Clear filters</button></div>';
             } else {
               h += '<div class="table-wrap"><table class="log"><thead><tr><th>Date</th><th>Phase</th><th>%</th><th>Health</th><th>Work done</th><th>Blockers</th><th>By</th><th><span class="muted" style="font-size:0">Actions</span></th></tr></thead><tbody>' +
                 rows.map(function (e) {
@@ -2265,6 +2502,33 @@
                 if (!f || !confirm('Delete this log entry?')) return;
                 f.log = f.log.filter(function (x) { return x.id !== id; });
                 touch(f.id); render(); toast('Entry deleted'); break;
+              case 'clear-log-filter':
+                f = currentF();
+                if (f) { state.logFilters[f.id] = emptyLogFilter(); render(); }
+                break;
+              case 'export-log':
+                f = currentF();
+                if (!f || !f.log.length) { toast('Nothing to export'); break; }
+                downloadCsv(csvFilename(f), displayName(f), f.log.slice().sort(cmpEntry));
+                toast('Exported ' + f.log.length + (f.log.length === 1 ? ' entry' : ' entries'));
+                break;
+              case 'clear-feed-filter':
+                state.feedFilter = null;
+                render();
+                break;
+              case 'export-all-logs': {
+                var exported = [];
+                activeFeatures().forEach(function (feat) {
+                  feat.log.forEach(function (entry) {
+                    exported.push({ feature: displayName(feat), date: entry.date, phase: entry.phase, pct: entry.pct, health: entry.health, work: entry.work, blockers: entry.blockers, by: entry.by, id: entry.id });
+                  });
+                });
+                exported.sort(function (a, b) { return cmpEntry(a, b); });
+                if (!exported.length) { toast('Nothing to export'); break; }
+                downloadRowsCsv('all-updates.csv', exported);
+                toast('Exported ' + exported.length + (exported.length === 1 ? ' entry' : ' entries'));
+                break;
+              }
             }
           });
 
@@ -2277,8 +2541,19 @@
           });
 
           $app.addEventListener('input', function (e) {
-            var t = e.target, f = currentF();
+            var t = e.target;
+            if (t.getAttribute('data-feed-filter') === 'q') {
+              feedFilter().q = t.value.slice(0, 200);
+              render();
+              return;
+            }
+            var f = currentF();
             if (!f) return;
+            if (t.getAttribute('data-log-filter') === 'q') {
+              logFilter(f.id).q = t.value.slice(0, 200);
+              render();
+              return;
+            }
             var dk = t.getAttribute('data-draft');
             if (dk) { var d0 = getDraft(f, derive(f)); d0[dk] = t.value; d0.touched = true; return; }
             var k = t.getAttribute('data-field');
@@ -2291,8 +2566,21 @@
           });
 
           $app.addEventListener('change', function (e) {
-            var t = e.target, f = currentF();
+            var t = e.target;
+            var ffk = t.getAttribute('data-feed-filter');
+            if (ffk && ffk !== 'q') { applyFeedFilter(ffk, t.value); render(); return; }
+            var f = currentF();
             if (!f) return;
+            var lfk = t.getAttribute('data-log-filter');
+            if (lfk && lfk !== 'q') {
+              var lf = logFilter(f.id);
+              if (lfk === 'from' || lfk === 'to') lf[lfk] = isDate(t.value) ? t.value : '';
+              else if (lfk === 'phase') lf.phase = PHASES.indexOf(t.value) >= 0 ? t.value : '';
+              else if (lfk === 'health') lf.health = HEALTH.indexOf(t.value) >= 0 ? t.value : '';
+              else if (lfk === 'by') lf.by = t.value.slice(0, 80);
+              render();
+              return;
+            }
             var dk = t.getAttribute('data-draft');
             if (dk) {
               var dr = getDraft(f, derive(f));
