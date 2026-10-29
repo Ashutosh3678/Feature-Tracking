@@ -218,30 +218,6 @@
         background: var(--c);
       }
 
-      /* Status colors */
-      .h-on-track,
-      .h-on-schedule {
-        --c: var(--ok);
-      }
-      .h-on-hold {
-        --c: var(--warn);
-      }
-      .h-overdue {
-        --c: var(--bad);
-      }
-      .h-completed,
-      .h-done {
-        --c: var(--done);
-      }
-      .h-in-progress,
-      .h-brand {
-        --c: var(--accent);
-      }
-      .h-not-started,
-      .h-no-date,
-      .h-none {
-        --c: var(--idle);
-      }
       .pill {
         --c: var(--idle);
         display: inline-flex;
@@ -274,6 +250,34 @@
         font-size: 11.5px;
         line-height: 20px;
         padding: 0 7px;
+      }
+      /* After .pill so a status class wins over the pill's default color. */
+      .h-on-track,
+      .h-on-schedule {
+        --c: var(--ok);
+      }
+      .h-on-hold,
+      .h-high {
+        --c: var(--warn);
+      }
+      .h-overdue,
+      .h-critical {
+        --c: var(--bad);
+      }
+      .h-completed,
+      .h-done {
+        --c: var(--done);
+      }
+      .h-in-progress,
+      .h-brand,
+      .h-medium {
+        --c: var(--accent);
+      }
+      .h-not-started,
+      .h-no-date,
+      .h-none,
+      .h-low {
+        --c: var(--idle);
       }
 
       /* Layout */
@@ -546,6 +550,45 @@
         font-size: 16px;
         word-break: break-word;
       }
+      .fcard-badges {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        flex: none;
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--card);
+      }
+      .seg button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: var(--ink2);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 550;
+        padding: 5px 12px;
+        min-height: 32px;
+        cursor: pointer;
+      }
+      .seg button + button {
+        border-left: 1px solid var(--line);
+      }
+      .seg button:hover {
+        background: var(--hover);
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--ink);
+        color: #fff;
+      }
+      .seg button[aria-pressed="true"]:hover {
+        background: #353b42;
+      }
       .k-sm {
         font-size: 12.5px;
         color: var(--muted);
@@ -741,7 +784,7 @@
       }
       .fields {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
         margin-top: 20px;
       }
@@ -946,6 +989,81 @@
         border: 1px solid #f0c4c7;
         padding: 8px 12px;
         border-radius: 7px;
+      }
+      .prio {
+        border: 0;
+        margin: 0;
+        padding: 0;
+        min-width: 0;
+      }
+      .prio legend {
+        padding: 0;
+        margin-bottom: 5px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--ink2);
+      }
+      .prio-opts {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .prio-opts label {
+        position: relative;
+        gap: 0;
+      }
+      .prio-opts input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+      }
+      .prio-opts span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 36px;
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 550;
+        color: var(--ink2);
+        background: var(--card);
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+      }
+      .prio-opts span::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--c, var(--idle));
+        flex: none;
+      }
+      .prio-opts span:hover {
+        border-color: #d0d0c9;
+      }
+      .prio-opts input:checked + span {
+        color: var(--ink);
+        border-color: var(--ink);
+        background: var(--hover);
+      }
+      @supports (background: color-mix(in srgb, red 10%, white)) {
+        .prio-opts input:checked + span {
+          border-color: color-mix(in srgb, var(--c, var(--ink)) 42%, var(--line));
+          background: color-mix(in srgb, var(--c, var(--ink)) 10%, #fff);
+        }
+      }
+      .prio-opts input:focus-visible + span {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
       .table-wrap {
         overflow-x: auto;
@@ -1336,6 +1454,9 @@
         .log-filters {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+        .fields {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
       @media (max-width: 720px) {
         .wrap {
@@ -1357,6 +1478,9 @@
         }
         .fields {
           grid-template-columns: minmax(0, 1fr);
+        }
+        .prio-opts {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         .title-input {
           font-size: 21px;
@@ -1516,6 +1640,7 @@
           var WEIGHTS = { 'Design': 0.20, 'Development': 0.40, 'Testing': 0.25, 'Review and Shipping': 0.15 };
           var LEGACY_PHASE = { 'Shipping': 'Review and Shipping' };
           var HEALTH = ['On Track', 'On Hold'];
+          var PRIORITIES = ['Critical', 'High', 'Medium', 'Low'];
           var LEGACY_HEALTH = { 'Blocked': 'On Hold', 'At Risk': 'On Track' };
           var DEFAULT_IDS = ['f1', 'f2', 'f3', 'f4'];
           var TEAM = ['Nishi', 'Ashutosh', 'Saiteja', 'Charan', 'Tharun', 'Venkat', 'Ajay'];
@@ -1524,13 +1649,14 @@
           var ID_RE = /^f[1-9]\d{0,3}$/;
           var LS_DOCS = 'featureTracker.v1.features';
           var LS_BY = 'featureTracker.v1.lastBy';
+          var LS_SORT = 'featureTracker.v1.sort';
           var SAVE_DELAY = 350;
 
           var $app = document.getElementById('app');
           var $tabs = document.getElementById('tabs');
           var $toast = document.getElementById('toast');
           var $modal = document.getElementById('modal');
-          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null, loaded: false, logFilters: {}, feedFilter: null };
+          var state = { docs: {}, view: 'overview', drafts: {}, errors: {}, showArchived: false, openPicker: null, loaded: false, logFilters: {}, feedFilter: null, sort: 'newest' };
           var store = null;
           var pendingRemote = false;
           var pointerDown = false;
@@ -1568,6 +1694,7 @@
           function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
           function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
           function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+          state.sort = lsGet(LS_SORT) === 'priority' ? 'priority' : 'newest';
           function displayName(f) { return (f.name || '').trim() || ('Feature ' + idNum(f.id)); }
 
           var toastTimer;
@@ -1629,15 +1756,20 @@
               target: isDate(raw.target) ? raw.target : '',
               phases: phases,
               log: log,
-              archived: raw.archived === true
+              archived: raw.archived === true,
+              priority: PRIORITIES.indexOf(raw.priority) >= 0 ? raw.priority : '',
+              createdAt: typeof raw.createdAt === 'number' && isFinite(raw.createdAt) && raw.createdAt > 0 ? raw.createdAt : 0
             };
           }
           function serialize(f) {
             if (f.deleted) return { deleted: true, updatedAt: Date.now() };
-            return JSON.parse(JSON.stringify({
+            var doc = {
               name: f.name, lead: f.lead, description: f.description, start: f.start, target: f.target,
+              priority: PRIORITIES.indexOf(f.priority) >= 0 ? f.priority : '',
               phases: f.phases, log: f.log, archived: !!f.archived, updatedAt: Date.now()
-            }));
+            };
+            if (f.createdAt > 0) doc.createdAt = f.createdAt;
+            return JSON.parse(JSON.stringify(doc));
           }
 
           /* ---------- derived values ---------- */
@@ -1706,6 +1838,21 @@
           }
           function liveFeatures() { return allIds().map(getF).filter(function (f) { return !f.deleted; }); }
           function activeFeatures() { return liveFeatures().filter(function (f) { return !f.archived; }); }
+          function priorityRank(p) {
+            var i = PRIORITIES.indexOf(p);
+            return i < 0 ? PRIORITIES.length : i;
+          }
+          function createdKey(f) { return f.createdAt > 0 ? f.createdAt : idNum(f.id); }
+          function cmpFeatures(a, b) {
+            if (state.sort === 'priority') {
+              var d = priorityRank(a.priority) - priorityRank(b.priority);
+              if (d) return d;
+            }
+            var ca = createdKey(a), cb = createdKey(b);
+            if (ca !== cb) return cb > ca ? 1 : -1;
+            return idNum(b.id) - idNum(a.id);
+          }
+          function sortFeatures(list) { return list.slice().sort(cmpFeatures); }
           function currentF() {
             var v = state.view;
             if (v === 'overview' || !ID_RE.test(v)) return null;
@@ -1968,17 +2115,31 @@
           }
 
           function renderTabs(v) {
-            var fs = activeFeatures();
+            var fs = sortFeatures(activeFeatures());
             var cur = v !== 'overview' ? getF(v) : null;
             if (cur && cur.archived) fs = fs.concat([cur]);
             var h = '<button type="button" class="tab' + (v === 'overview' ? ' active' : '') + '" data-action="nav" data-id="overview"' + (v === 'overview' ? ' aria-current="page"' : '') + '>Overview</button>';
             fs.forEach(function (f) {
               var d = derive(f), act = v === f.id;
-              h += '<button type="button" class="tab' + (act ? ' active' : '') + '" data-action="nav" data-id="' + esc(f.id) + '"' + (act ? ' aria-current="page"' : '') + ' title="' + esc(displayName(f)) + ' · ' + esc(d.health) + '">' +
+              var tip = displayName(f) + ' · ' + d.health + (f.priority ? ' · ' + f.priority : '');
+              h += '<button type="button" class="tab' + (act ? ' active' : '') + '" data-action="nav" data-id="' + esc(f.id) + '"' + (act ? ' aria-current="page"' : '') + ' title="' + esc(tip) + '">' +
                 '<span class="tdot h-' + slug(d.health) + '"></span><span class="tl">' + esc(displayName(f)) + '</span></button>';
             });
             h += '<button type="button" class="tab tab-add" data-action="add-feature">+ New feature</button>';
             $tabs.innerHTML = h;
+          }
+
+          function priorityOptions(value) {
+            return '<option value="">Not set</option>' + PRIORITIES.map(function (p) {
+              return '<option value="' + esc(p) + '"' + (p === value ? ' selected' : '') + '>' + esc(p) + '</option>';
+            }).join('');
+          }
+          function priorityPicker(selected) {
+            return '<fieldset class="prio"><legend>Priority</legend><div class="prio-opts" role="radiogroup" aria-label="Priority">' +
+              PRIORITIES.map(function (p) {
+                return '<label class="h-' + slug(p) + '"><input type="radio" name="priority" value="' + esc(p) + '"' +
+                  (p === selected ? ' checked' : '') + '><span>' + esc(p) + '</span></label>';
+              }).join('') + '</div></fieldset>';
           }
 
           function featureCard(x) {
@@ -1986,8 +2147,9 @@
             var mini = PHASES.map(function (p) {
               return '<div class="mini-row own"><span class="muted">' + p + '</span>' + bar(d.phases[p].pct) + '<b>' + d.phases[p].pct + '%</b>' + avatarStack(f.phases[p].owners, 2) + '</div>';
             }).join('');
-            return '<article class="card fcard h-' + slug(d.health) + '" data-action="nav" data-id="' + esc(f.id) + '" tabindex="0" role="link" aria-label="Open ' + esc(displayName(f)) + '">' +
-              '<div class="fcard-top"><div style="min-width:0"><h3>' + esc(displayName(f)) + '</h3><p class="muted" style="margin-top:6px">' + who(f.lead, 'No lead') + '</p></div>' + pill(d.health) + '</div>' +
+            return '<article class="card fcard h-' + slug(d.health) + '" data-action="nav" data-id="' + esc(f.id) + '" tabindex="0" role="link" aria-label="Open ' + esc(displayName(f)) + (f.priority ? ', ' + esc(f.priority) + ' priority' : '') + '">' +
+              '<div class="fcard-top"><div style="min-width:0"><h3>' + esc(displayName(f)) + '</h3><p class="muted" style="margin-top:6px">' + who(f.lead, 'No lead') + '</p></div>' +
+              '<div class="fcard-badges">' + (f.priority ? pill(f.priority) : '') + pill(d.health) + '</div></div>' +
               (f.description.trim() ? '<p class="desc">' + esc(f.description) + '</p>' : '') +
               '<div class="prog"><div class="big"><b>' + Math.round(d.overall) + '%</b><span>complete</span><span class="cur">' +
               (d.current === 'All done' ? 'All phases done' : esc(d.current)) + '</span></div>' + bar(d.overall) + '</div>' +
@@ -1998,8 +2160,8 @@
           }
 
           function viewOverview() {
-            var fs = activeFeatures().map(function (f) { return { f: f, d: derive(f) }; });
-            var archived = liveFeatures().filter(function (f) { return f.archived; });
+            var fs = sortFeatures(activeFeatures()).map(function (f) { return { f: f, d: derive(f) }; });
+            var archived = sortFeatures(liveFeatures().filter(function (f) { return f.archived; }));
             function count(h) { return fs.filter(function (x) { return x.d.health === h; }).length; }
             var stats = [['Features', fs.length, 'none'], ['On Track', count('On Track'), 'on-track'],
               ['On Hold', count('On Hold'), 'on-hold'], ['Completed', count('Completed'), 'completed']];
@@ -2010,7 +2172,12 @@
               return '<div class="stat h-' + s[2] + '"><div class="k">' + s[0] + '</div><div class="v">' + s[1] + '</div></div>';
             }).join('') + '</section>';
 
-            h += '<h2 class="sec-title">Features</h2>';
+            h += '<div class="sec-row"><h2 class="sec-title">Features <span class="count">' +
+              (state.sort === 'priority' ? 'Highest priority' : 'Newest first') + '</span></h2>' +
+              '<div class="seg" role="group" aria-label="Sort features">' +
+              '<button type="button" data-action="sort" data-id="newest" aria-pressed="' + (state.sort !== 'priority' ? 'true' : 'false') + '">Newest</button>' +
+              '<button type="button" data-action="sort" data-id="priority" aria-pressed="' + (state.sort === 'priority' ? 'true' : 'false') + '">Priority</button>' +
+              '</div></div>';
             h += fs.length ? '<section class="fgrid">' + fs.map(featureCard).join('') + '</section>'
               : '<div class="card"><div class="empty"><strong>No active features</strong><span>Add a feature to start tracking it.</span><button type="button" class="btn primary" data-action="add-feature">+ Add feature</button></div></div>';
 
@@ -2083,7 +2250,7 @@
                 h += '<section class="card">' + archived.map(function (f) {
                   var d = derive(f);
                   return '<div class="arch-row"><div class="grow"><strong>' + esc(displayName(f)) + '</strong><div class="muted" style="font-size:13px">Lead: ' + (f.lead ? esc(f.lead) : '—') +
-                    ' · ' + Math.round(d.overall) + '% · last update ' + esc(fmtDate(d.lastUpdate)) + '</div></div>' + pill(d.health) +
+                    ' · ' + Math.round(d.overall) + '% · last update ' + esc(fmtDate(d.lastUpdate)) + '</div></div>' + (f.priority ? pill(f.priority) : '') + pill(d.health) +
                     '<div class="acts"><button type="button" class="btn sm" data-action="nav" data-id="' + esc(f.id) + '">Open</button>' +
                     '<button type="button" class="btn sm" data-action="restore" data-id="' + esc(f.id) + '">Restore</button>' +
                     '<button type="button" class="btn sm danger" data-action="delete-feature" data-id="' + esc(f.id) + '">Delete</button></div></div>';
@@ -2258,11 +2425,12 @@
             h += '<section class="card hero">' +
               '<div><input class="title-input" data-field="name" data-focus="name" value="' + esc(f.name) + '" maxlength="80" placeholder="Feature ' + idNum(f.id) + '" aria-label="Feature name">' +
               '<textarea class="desc-input" data-field="description" data-focus="description" rows="2" maxlength="300" placeholder="Add a short description…" aria-label="Feature description">' + esc(f.description) + '</textarea>' +
-              '<div class="hero-meta">' + pill(d.health) + '<span class="sep"></span><span class="muted">Current phase: <b style="color:var(--ink)">' + esc(d.current) + '</b></span>' +
+              '<div class="hero-meta">' + (f.priority ? pill(f.priority) : '') + pill(d.health) + '<span class="sep"></span><span class="muted">Current phase: <b style="color:var(--ink)">' + esc(d.current) + '</b></span>' +
               '<span class="sep"></span><span class="' + si.cls + '" style="font-weight:650">' + esc(si.text) + '</span>' +
               (d.lastUpdate ? '<span class="sep"></span><span class="muted">Last update ' + esc(fmtDate(d.lastUpdate)) + '</span>' : '') + '</div>' +
               '<div class="fields">' +
               '<label>Lead<select data-field="lead" data-focus="lead">' + personOptions(f.lead) + '</select></label>' +
+              '<label>Priority<select data-field="priority" data-focus="priority" aria-label="Priority">' + priorityOptions(f.priority) + '</select></label>' +
               '<label>Start date<input type="date" data-field="start" data-focus="start" value="' + esc(f.start) + '"></label>' +
               '<label>Target ship date<input type="date" data-field="target" data-focus="target" value="' + esc(f.target) + '"></label>' +
               '</div></div>' +
@@ -2411,11 +2579,12 @@
             }).join('');
             $modal.innerHTML = '<div class="modal-back" data-action="modal-close">' +
               '<form class="card modal" id="newFeatureForm" role="dialog" aria-modal="true" aria-labelledby="nfTitle" novalidate autocomplete="off">' +
-              '<h2 id="nfTitle">New feature</h2><p class="sub">Set the lead and who works on each phase. Pick as many people as needed. You can change all of this later.</p>' +
+              '<h2 id="nfTitle">New feature</h2><p class="sub">It will appear at the top of the board. Set how important it is, plus the lead and who works on each phase.</p>' +
               '<div class="form">' +
               '<label><span>Feature name <span class="req" aria-hidden="true">*</span></span><input name="name" maxlength="80" placeholder="e.g. Checkout redesign" required></label>' +
               '<label><span>Description <span class="muted">(optional)</span></span><textarea name="description" rows="2" maxlength="300" placeholder="What is this feature about? One or two lines."></textarea></label>' +
               '<label>Lead<select name="lead">' + personOptions('') + '</select></label>' +
+              priorityPicker('Medium') +
               '<div class="frow"><label>Start date<input type="date" name="start" value="' + today() + '"></label>' +
               '<label>Target ship date<input type="date" name="target"></label></div>' +
               '</div>' +
@@ -2443,6 +2612,7 @@
               if (!name) form.elements.name.focus();
               return;
             }
+            var pri = PRIORITIES.indexOf(get('priority')) >= 0 ? get('priority') : 'Medium';
             var id = nextFeatureId();
             if (!ID_RE.test(id)) { toast('Feature limit reached'); return; }
             var phases = {};
@@ -2451,7 +2621,10 @@
               form.querySelectorAll('[data-new-owner="' + p + '"]').forEach(function (c) { if (c.checked) picked.push(c.value); });
               phases[p] = { start: '', end: '', owners: picked };
             });
-            state.docs[id] = normFeature({ name: name, lead: get('lead'), description: get('description').trim(), start: start, target: target, phases: phases }, id);
+            state.docs[id] = normFeature({
+              name: name, lead: get('lead'), description: get('description').trim(), start: start, target: target,
+              phases: phases, priority: pri, createdAt: Date.now()
+            }, id);
             touch(id);
             closeModal();
             go(id);
@@ -2475,6 +2648,12 @@
             switch (a) {
               case 'nav': e.preventDefault(); go(id === 'overview' ? 'overview' : id); break;
               case 'add-feature': openNewFeature(); break;
+              case 'sort':
+                if (id !== 'newest' && id !== 'priority') break;
+                state.sort = id;
+                lsSet(LS_SORT, id);
+                render();
+                break;
               case 'modal-close':
                 if (el.classList.contains('modal-back') && e.target !== el) return;
                 closeModal(); break;
@@ -2599,6 +2778,10 @@
               touch(f.id); render(); return;
             }
             if (k === 'lead') { f.lead = t.value.slice(0, 80); touch(f.id); render(); return; }
+            if (k === 'priority') {
+              f.priority = PRIORITIES.indexOf(t.value) >= 0 ? t.value : '';
+              touch(f.id); render(); return;
+            }
             var op = t.getAttribute('data-owner-toggle');
             if (op && f.phases[op]) {
               var list = f.phases[op].owners.filter(function (n) { return n !== t.value; });
